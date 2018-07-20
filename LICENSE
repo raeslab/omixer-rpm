@@ -1,0 +1,107 @@
+Academic Non-commercial Software License Agreement for Omixer-RPM
+
+This software is provided by VIB vzw (hereinafter "VIB") located at Rijvisschestraat 120,
+B-9052 Zwijnaarde, Belgium under a software license to the user (hereinafter "USER") under the terms 
+and conditions outlined below (the “Agreement”). WHEREAS VIB owns or has rights in certain software 
+called Omixer-RPM (hereinafter "Licensed Software"), and VIB desires to license said software so that it 
+becomes available for academic research use. WHEREAS USER desires to acquire a non-exclusive license to use the Licensed
+Software for internal non-commercial research purposes only. NOW, THEREFORE, in consideration of the mutual promises and
+covenants contained herein, the parties agree as follows:
+ 
+1. Licensed Software is the work of Youssef Darzi and Jeroen Raes.
+The copyright in Licensed Software is owned by VIB and Vrije Universiteit Brussel.
+Vrije Universiteit Brussel has given VIB the right to distribute
+Licensed Software.
+ 
+2. Through the access via a website VIB provides USER with an executable version of Licensed Software.
+ 
+3. Subject to the terms and conditions of this Agreement VIB hereby grants and
+USER accepts a non-exclusive, non-transferable license to use the Licensed
+Software for strictly internal, non-commercial research use only.  For the
+sake of this Agreement, non-commercial research shall mean internal research
+performed by USER, possibly in collaboration with academic third parties
+provided that Licensed Software is not transferred to such third party. For
+the sake of clarity, non-commercial research shall not include any form of
+research in collaboration with a company.
+ 
+4. USER confirms to be an academic user. For academic users, there is no
+license fee.
+ 
+5. USER shall acknowledge VIB as the provider of Licensed Software using a reference to: Darzi et al. (2014) in any
+manuscript describing data obtained using Licensed Software.
+ 
+6. This license does not entitle USER to receive from VIB hard-copy
+documentation, technical support, telephone assistance, or enhancements or
+updates to the Licensed Software, and nothing contained herein shall be
+interpreted as to require VIB, its faculty, employees or students to provide
+maintenance, installation services, debugging, consultation or end-user
+support of any kind. Any support that may be given by the authors on voluntary
+basis is provided "as is" and VIB makes no representations or warranties of
+any type whatsoever, express or implied, regarding the provided support.
+ 
+7. The title and copyright to Licensed Software and any associated programs
+and documentation shall remain with VIB and Vrije Universiteit Brussel. USER agrees
+to preserve the same.
+ 
+8. USER agrees not to make any copies of Licensed Software except for use
+in USER's laboratory, without VIB's prior written consent. USER
+agrees to place the appropriate copyright notice on any such copies.
+ 
+9. USER shall not distribute Licensed Software to other laboratories
+within USER's institution. USER shall not transfer Licensed Software
+to another location or person outside of USER's institution without VIB's
+prior and written permission.
+ 
+10. USER shall not market or otherwise benefit commercially from any
+product utilizing any portion of Licensed Software, nor any derivative works
+of Licensed Software, without first entering into a separate commercial
+license with VIB.
+ 
+11. USER acknowledges that Licensed Software is a research tool and
+provided free of charge, it is only provided "as is". VIB makes no
+representations or warranties of any type whatsoever, express or implied,
+regarding the Licensed Software. VIB expressly disclaims all representations
+and warranties regarding the Licensed Software, including but not limited to
+any representations or warranties of merchantability or fitness for any
+particular application or that the use of the Licensed Software will not
+infringe any patents, copyrights or trademarks or other rights of third
+parties, or any warranty that the rights and licenses granted hereunder
+comprise all the rights and licenses necessary or desirable to use the
+Licensed Software for internal non-commercial research purposes as permitted
+by this Agreement. The entire risk as to the quality and performance of the
+Licensed Software is borne by USER.
+ 
+12. VIB shall not be responsible for losses of any kind resulting from the use
+of Licensed Software, and can in no way provide compensation for any losses
+sustained, including but not limited to, any obligation, liability, right,
+claim or remedy for tort, or for any actual or alleged infringement of
+patents, copyrights, trade secrets, or similar rights of third parties, nor
+any business expense, machine downtime or damages caused by any deficiency,
+defect or error in Licensed Software or mal-function thereof, nor any
+incidental or consequential damages, however caused,  except insofar as such
+claims or liability results from VIB's gross negligence or willful misconduct.
+ 
+13. USER will indemnify, defend and hold harmless VIB, its directors,
+officers, employees and agents from and against all liability, losses, damages
+and expenses (including attorney's fees and costs) arising out of any claims,
+demands, actions or other proceedings made or instituted by any third party
+against any of them and arising out of or relating to any breach of this
+Agreement by USER, or any use of the Licensed Software by USER, except
+insofar as such claims or liability result from VIB's gross negligence or
+willful misconduct.
+ 
+14. This Agreement and the license rights granted herein shall become
+effective as of the date this Agreement is executed by both parties and shall
+continue in full force unless terminated in accordance with this Section. Upon
+one party's breach of any agreement, covenant, or representation made in this
+Agreement, the agreement will automatically end thirty (30) days after such
+breach. Either party shall have the right, at any time, to terminate this
+Agreement without cause by written notice to the other party specifying the
+date of termination. Upon termination, USER shall destroy all full and
+partial copies of the Licensed Software. USER shall forward written notice
+to VIB that all programs containing Licensed Software have been deleted from
+all computer libraries and storage or memory devices and are no longer stored
+therein.
+ 
+15. This Agreement shall be construed in accordance with the laws of Belgium.
+The courts of Belgium shall have exclusive jurisdiction. 
