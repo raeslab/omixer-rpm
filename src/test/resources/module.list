@@ -1,0 +1,573 @@
+MF0001	Ethanol production (formate pathway)
+K00656
+K00132	K04072	K04073
+K00001	K00121	K04072	K11440
+///
+MF0002	Ethanol production (CO2 pathway) 
+K01568
+K00001	K00121	K04072	K11440
+///
+MF0003	N-acetylglucosamine degradation
+K01443	K02079
+K02564	K01504
+///
+MF0004	putrescine degradation
+K00137,K09251	K09473,K09470
+///
+MF0005	N-acetylneuraminate and N-acetylmannosamine degradation
+K01639
+K00885
+K01788
+///
+MF0006	urea degradation
+K01941
+K01457
+///
+MF0007	urea degradation (urease pathway)
+K01428,K01429,K01430
+///
+MF0008	phenylalanine degradation
+K00832	K00811	K00812	K00813	K11358	K00817
+K00146	K00129
+///
+MF0009	tyrosine degradation
+K01668	K00832,K00129	K00811,K00129	K00812,K00129	K00813,K00129	K11358,K00129	K00817,K00129
+///
+MF0010	tryptophan degradation
+K01667
+///
+MF0011	aspartate degradation (oxaloacetate pathway)
+K00811	K00812	K00813	K11358
+///
+MF0012	aspartate degradation (fumarate pathway)
+K01744
+///
+MF0013	glutamate degradation (crotonyl-CoA pathway)
+K00260	K00261	K00262
+K00109
+K01039,K01040
+K01726
+K01615
+///
+MF0014	glutamate degradation (4-aminobutanoate pathway)
+K01580
+///
+MF0015	glutamate degradation (methylaspartate pathway)
+K01846
+K04835
+///
+MF0016	glycine degradation
+K00281	K00282,K00283
+K00605
+K00382
+///
+MF0017	alanine degradation
+K01775,K00285	K00814	K00259
+///
+MF0018	proline degradation (glutamate pathway)
+K00318,K00294	K13821
+///
+MF0019	proline degradation (aminopentanoate pathway)
+K01777
+K10793,K10794,K10795,K10796
+///
+MF0020	valine degradation
+K00826
+K00186,K00187,K00188,K00189	K00166,K00167,K09699,K00382	K11381,K09699,K00382
+K00248	K00249	K09478	K11410
+K01692	K01782	K01825
+K05605
+K00020	K01782	K01825	K07547,K07548
+K00140,K00822	K00140,K13524	K00140,K07250
+///
+MF0021	valine/leucine degradation (Ehrlich pathway)
+K00826
+K01568
+K00001	K00121	K04072	K11440
+///
+MF0022	leucine degradation
+K00826	K00263
+K00186,K00187,K00188,K00189	K00166,K00167,K11381,K09699,K00382
+K00249	K00253
+K01968,K01969
+K13766
+K01640
+///
+MF0023	isoleucine degradation
+K00826
+K00186,K00187,K00188,K00189	K00166,K00167,K11381,K09699,K00382
+K00248	K00249	K09478	K11410
+K01692	K01782	K01825
+K00020	K01782	K01825	K07547,K07548
+K00626	K00632	K07508
+///
+MF0024	methionine degradation (cysteine pathway)
+K00789
+K00558
+K01251
+///
+MF0025	methionine degradation (mercaptan pathway)
+K01761
+///
+MF0026	cysteine biosynthesis/homocysteine degradation
+K01697	K10150
+K01758
+///
+MF0027	cysteine degradation
+K01758	K01760	K00811,K01011	K00812,K01011	K00813,K01011	K11358,K01011
+///
+MF0028	serine degradation
+K01752
+///
+MF0029	threonine degradation (glycine pathway)
+K00060
+K00639
+///
+MF0030	threonine degradation (formate pathway)
+K01754
+K00656
+///
+MF0031	asparagine degradation (aspartate pathway)
+K01424
+///
+MF0032	glutamine degradation
+K01425	K00265,K00266
+///
+MF0033	arginine degradation (agmatine deiminase pathway)
+K01583	K01584	K01585	K02626
+K01480	K10536,K12251
+///
+MF0034	arginine degradation (arginase pathway)
+K01476
+K01581
+///
+MF0035	arginine degradation (AST/succinyltransferase pathway)
+K00673
+K01484
+K00840
+K06447
+K05526
+///
+MF0036	arginine degradation (arginine:pyruvate transaminase/4-aminobutyrate pathway)
+K12252
+K12253
+K12254
+K12255
+///
+MF0037	lysine fermentation to acetate and butyrate (3,6-diaminohexanoate pathway)
+K01843
+K01844
+K00248
+K01036
+///
+MF0038	lysine degradation (cadaverine pathway)
+K01582
+///
+MF0039	histidine degradation
+K01745
+K01712
+K01468
+K01479	K05603,K01458	K00603,K13990
+///
+MF0040	4-aminobutyrate degradation
+K00823	K07250	K13524
+K00043,K14534	K00135
+///
+MF0041	glycocholate degradation
+K01442
+K00076
+///
+MF0042	trehalose degradation
+K03731	K01226	K01194	K05342
+///
+MF0043	sucrose degradation
+K01193
+K00847
+///
+MF0044	lactose and galactose degradation
+K01220
+K01819
+K00917
+K08302	K01635
+K01803
+///
+MF0045	lactose degradation (galactohydrolase pathway)
+K12111	K01190	K12308
+///
+MF0046	maltose degradation
+K00691
+K01838
+///
+MF0047	melibiose degradation
+K07406	K07407
+///
+MF0048	sucrose degradation (Actinobacteria)
+K00690
+K00847
+K01792
+K01835
+///
+MF0049	allose degradation
+K00881
+K01808
+///
+MF0050	arabinose degradation
+K01804
+///
+MF0051	xylose degradation
+K01805
+K00854
+///
+MF0052	galactose degradation (Leloir pathway)
+K01785
+K00849
+K00965
+K01784
+K01838
+///
+MF0053	alpha-D-glucose and alpha-D-glucose 1-phosphate degradation
+K00117
+K00845
+K01053
+K01085
+K01792
+K01835
+///
+MF0054	fructose degradation
+K00882
+///
+MF0055	rhamnose degradation
+K01813
+K00848
+K01629
+K01803
+///
+MF0056	ribose degradation
+K00852
+///
+MF0057	mannose degradation
+K01809
+///
+MF0058	starch degradation
+K01176	K07405
+K01200	K01208
+K00688	K00705	K01187	K12047	K01178	K01182	K01214
+///
+MF0059	fructan degradation
+K03332
+///
+MF0060	pectin degradation
+K01051
+K01184
+K01213
+K01815
+K00874
+K01625
+///
+MF0061	glycogen metabolism
+K00975
+K00703
+K00700
+K00688
+K01187
+K01196	K00705
+///
+MF0062	PHB production
+K00023
+K03821
+///
+MF0063	glucarate degradation
+K01706
+K01707,K13877	K00042,K01630,K11529
+///
+MF0064	galactarate degradation
+K01708
+K01707,K13877	K00042,K01630,K11529
+///
+MF0065	galactonate degradation
+K01684
+K00883
+K01631
+///
+MF0066	D-galacturonate degradation
+K01812
+K00041
+K01685
+K00874
+///
+MF0067	ribitol degradation
+K00039
+K00875
+K01783
+///
+MF0068	sorbitol degradation
+K00008
+///
+MF0069	mannitol degradation
+K00009
+///
+MF0070	sorbose/sorbitol degradation
+K00068
+///
+MF0071	arabitol degradation
+K00007
+K00854
+///
+MF0072	galactitol degradation
+K00094
+K00917
+K01635	K08302
+K01803
+///
+MF0073	xylitol degradation
+K05351
+K00854
+///
+MF0074	bifidobacterium shunt
+K01632
+K00616
+K00615
+K01807	K01808
+K01783
+K01621
+///
+MF0075	Glycolysis (preparatory phase)
+K00844	K00845
+K01810	K06859	K13810
+K00850
+K01623	K01624
+K01803
+///
+MF0076	Glycolysis (pay-off phase)
+K00134	K00150
+K00927
+K01834	K01837
+K01689
+K00873
+///
+MF0077	pentose phosphate pathway (oxidative branch)
+K00036
+K01057	K07404
+K00033
+///
+MF0078	pentose phosphate pathway (non-oxidative branch)
+K01783
+K01807	K01808
+K00615
+K00616
+///
+MF0079	pyruvate dehydrogenase complex
+K00161,K00162	K00163
+K00382
+K00627
+///
+MF0080	pyruvate:ferredoxin oxidoreductase
+K00169,K00170,K00171,K00172
+///
+MF0081	pyruvate:formate lyase
+K00656
+///
+MF0082	TCA cycle
+K01647
+K01681	K01682
+K00031	K00030
+K00164,K00658,K00382
+K01902,K01903
+K00239,K00240,K00241,K00242	K00244,K00245,K00246,K00247
+K01676	K01679	K01677,K01678
+K00024	K00116
+///
+MF0083	TCA cycle (Mycobacterium pathway)
+K01647
+K01681	K01682
+K00031	K00030
+K01616
+K01637
+K01638
+K00239,K00240,K00241,K00242	K00244,K00245,K00246,K00247
+K00024
+///
+MF0084	TCA cycle (Helicobacter pathway)
+K01647
+K01681	K01682
+K00031	K00030
+K00174,K00175,K00176,K00177
+K01027	K01028,K01029
+K01676	K01679	K01677,K01678
+K00116
+///
+MF0085	Entner-Doudoroff pathway I
+K01690
+K01625
+///
+MF0086	beta-D-glucuronide and D-glucuronate degradation
+K00040
+K00874
+K01195
+K01686
+K01812
+///
+MF0087	homoacetogenesis
+K05299,K15022
+K01938
+K01491
+K00297
+K11174
+K00191
+///
+MF0088	hydrogen metabolism
+K00532	K00533,K00534,K06441	K00436
+///
+MF0089	Methanogenesis - methyl-coM
+K00399,K00400,K00401,K00402,K03421,K03422
+///
+MF0090	methanogenesis from carbon dioxide
+K00200,K00201,K00202,K00203,K00204,K00205,K11261,K11260
+K00672
+K01499
+K00319
+K00320
+K00440,K00441,K00443
+K00577,K00578,K00579,K00580,K00581,K00582,K00583,K00584
+///
+MF0091	methanol conversion
+K04480	K14080	K14081
+///
+MF0092	Sulfate reduction
+K00394,K00395
+K00380,K00381	K00392
+///
+MF0093	mucin degradation
+K01186
+K05970
+K01132	K01135	K01137	K01205
+K01207	K12373
+K01205	K01207	K12373	K01227	K13714
+K01206
+///
+MF0094	nitrate reduction (assimilatory)
+K00366,K00367	K00362,K00363
+K01915
+K00262
+///
+MF0095	nitrate reduction (dissimilatory)
+K03385	K05904
+///
+MF0096	anaerobic fatty acid beta-oxidation
+K06076
+K12507
+K06445
+K00632,K01782
+///
+MF0097	glycerol degradation (propanediol pathway)
+K06120,K06121,K06122
+K00086
+///
+MF0098	glycerol degradation (dihydroxyacetone pathway)
+K00005
+K00863
+K01803
+///
+MF0099	glycerol degradation (glycerol kinase pathway)
+K00864
+K01126
+K00111	K00112,K00113
+K01803
+///
+MF0100	glyoxylate bypass
+K01647
+K01681	K01682
+K01637
+K00024
+K01596	K01610
+///
+MF0101	triacylglycerol degradation
+K01046
+K01054
+///
+MF0102	acetate to acetyl-CoA
+K01895
+///
+MF0103	acetyl-CoA to acetate
+K00625,K00925	K01905	K01067
+///
+MF0104	Acetyl-CoA to crotonyl-CoA
+K00626
+K00023
+K01715
+///
+MF0105	Crotonyl-coA from succinate
+K01902,K01903
+K15038
+K14465
+K14466
+K14534
+///
+MF0106	butyrate production via transferase
+K00248	K10783
+K01034,K01035
+///
+MF0107	propionate production via kinase
+K00248	K10783
+K00634
+K00929
+///
+MF0108	formate conversion
+K00122	K00123,K00124,K00125,K00126,K00127	K08348,K08349,K08350	K05299
+///
+MF0109	Lactate/pyruvate interconversion
+K00016
+///
+MF0110	propionate production (acrylate pathway)
+K01026
+K00249	K00224
+///
+MF0111	propionate production (succinate pathway)
+K01902,K01903
+K01847	K01849	K01848	K11942
+K05606
+K03416	K11264
+///
+MF0112	propionate production (propanediol pathway)
+K00011	K00048
+K01699,K13919,K13920
+K00086,K13922	K13921,K13922
+///
+MF0113	Fucose degradation
+K01818
+K00879
+K01628
+K01803
+///
+MF0114	propionate production via kinase
+K13788	K00625	K13923
+K00932	K00925
+///
+MF0115	propionate production via transferase
+K01026
+///
+MF0116	Succinate production
+K01596	K01610	K00873,K01958	K00873,K01959,K01960
+K00024	K00116	K00051
+K01676	K01677,K01678	K01679
+K00239,K00240,K00241,K00242,K00244,K00245,K00246,K00247
+///
+MF0117	Propionate conversion to succinate
+K01908
+K01659
+K01720
+K01682
+K03417
+///
+MF0118	catalase
+K00429	K03781	K03782
+///
+MF0119	peroxidase
+K05910	K00428	K03782	K00432	K00433	K03386	K03564	K11065	K07223
+///
+MF0120	superoxide dismutase
+K00518	K04564	K04565
+///
+MF0121	superoxide reductase
+K05919
+///

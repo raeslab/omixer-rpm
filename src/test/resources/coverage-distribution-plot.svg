@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="620" version="1.1">
+<rect width="820" height="620" stroke="white" fill="white"/><g transform="translate(50, 10)">
+<line x1="84.44444444444446" y1="0.0" x2="168.8888888888889" y2="51.30434782608695" style="stroke-width:2;stroke:lightblue;" />
+<line x1="168.8888888888889" y1="51.30434782608695" x2="253.33333333333331" y2="76.95652173913044" style="stroke-width:2;stroke:lightblue;" />
+<line x1="253.33333333333331" y1="76.95652173913044" x2="337.7777777777778" y2="128.26086956521738" style="stroke-width:2;stroke:lightblue;" />
+<line x1="337.7777777777778" y1="128.26086956521738" x2="422.22222222222223" y2="230.8695652173913" style="stroke-width:2;stroke:lightblue;" />
+<line x1="422.22222222222223" y1="230.8695652173913" x2="506.66666666666663" y2="384.7826086956522" style="stroke-width:2;stroke:lightblue;" />
+<line x1="506.66666666666663" y1="384.7826086956522" x2="675.5555555555557" y2="436.0869565217391" style="stroke-width:2;stroke:lightblue;" />
+<line x1="675.5555555555557" y1="436.0869565217391" x2="760.0" y2="538.695652173913" style="stroke-width:2;stroke:lightblue;" />
+<circle cx="84.44444444444446" cy="0.0" r="4.0" style="stroke:steelblue;stroke-width:2" fill="white"/>
+<circle cx="168.8888888888889" cy="51.30434782608695" r="4.0" style="stroke:steelblue;stroke-width:2" fill="white"/>
+<circle cx="253.33333333333331" cy="76.95652173913044" r="4.0" style="stroke:steelblue;stroke-width:2" fill="white"/>
+<circle cx="337.7777777777778" cy="128.26086956521738" r="4.0" style="stroke:steelblue;stroke-width:2" fill="white"/>
+<circle cx="422.22222222222223" cy="230.8695652173913" r="4.0" style="stroke:steelblue;stroke-width:2" fill="white"/>
+<circle cx="506.66666666666663" cy="384.7826086956522" r="4.0" style="stroke:steelblue;stroke-width:2" fill="green"/>
+<circle cx="675.5555555555557" cy="436.0869565217391" r="4.0" style="stroke:steelblue;stroke-width:2" fill="white"/>
+<circle cx="760.0" cy="538.695652173913" r="4.0" style="stroke:steelblue;stroke-width:2" fill="white"/>
+<line x1="0.0" y1="590.0" x2="760.0" y2="590.0" style="stroke-width:2;stroke:black;" />
+<line x1="84.44444444444446" y1="590.0" x2="84.44444444444446" y2="595.0" style="stroke-width:2;stroke:black;" />
+<text x="94.44444444444446" y="600" dy=".32em" text-anchor="end">0.10</text>
+<line x1="168.8888888888889" y1="590.0" x2="168.8888888888889" y2="595.0" style="stroke-width:2;stroke:black;" />
+<text x="178.8888888888889" y="600" dy=".32em" text-anchor="end">0.20</text>
+<line x1="337.7777777777778" y1="590.0" x2="337.7777777777778" y2="595.0" style="stroke-width:2;stroke:black;" />
+<text x="347.7777777777778" y="600" dy=".32em" text-anchor="end">0.40</text>
+<line x1="675.5555555555557" y1="590.0" x2="675.5555555555557" y2="595.0" style="stroke-width:2;stroke:black;" />
+<text x="685.5555555555557" y="600" dy=".32em" text-anchor="end">0.80</text>
+<line x1="253.33333333333331" y1="590.0" x2="253.33333333333331" y2="595.0" style="stroke-width:2;stroke:black;" />
+<text x="263.3333333333333" y="600" dy=".32em" text-anchor="end">0.30</text>
+<line x1="506.66666666666663" y1="590.0" x2="506.66666666666663" y2="595.0" style="stroke-width:2;stroke:black;" />
+<text x="516.6666666666666" y="600" dy=".32em" text-anchor="end">0.60</text>
+<line x1="760.0" y1="590.0" x2="760.0" y2="595.0" style="stroke-width:2;stroke:black;" />
+<text x="770.0" y="600" dy=".32em" text-anchor="end">0.90</text>
+<line x1="422.22222222222223" y1="590.0" x2="422.22222222222223" y2="595.0" style="stroke-width:2;stroke:black;" />
+<text x="432.22222222222223" y="600" dy=".32em" text-anchor="end">0.50</text>
+<line x1="0.0" y1="0.0" x2="0.0" y2="590.0" style="stroke-width:2;stroke:black;" />
+<line x1="-5.0" y1="0.0" x2="0.0" y2="0.0" style="stroke-width:2;stroke:black;" />
+<text x="-9" y="0.0" dy=".32em" text-anchor="end">115.0</text>
+<line x1="-5.0" y1="128.26086956521738" x2="0.0" y2="128.26086956521738" style="stroke-width:2;stroke:black;" />
+<text x="-9" y="128.26086956521738" dy=".32em" text-anchor="end">90.0</text>
+<line x1="-5.0" y1="436.0869565217391" x2="0.0" y2="436.0869565217391" style="stroke-width:2;stroke:black;" />
+<text x="-9" y="436.0869565217391" dy=".32em" text-anchor="end">30.0</text>
+<line x1="-5.0" y1="230.8695652173913" x2="0.0" y2="230.8695652173913" style="stroke-width:2;stroke:black;" />
+<text x="-9" y="230.8695652173913" dy=".32em" text-anchor="end">70.0</text>
+<line x1="-5.0" y1="51.30434782608695" x2="0.0" y2="51.30434782608695" style="stroke-width:2;stroke:black;" />
+<text x="-9" y="51.30434782608695" dy=".32em" text-anchor="end">105.0</text>
+<line x1="-5.0" y1="76.95652173913044" x2="0.0" y2="76.95652173913044" style="stroke-width:2;stroke:black;" />
+<text x="-9" y="76.95652173913044" dy=".32em" text-anchor="end">100.0</text>
+<line x1="-5.0" y1="384.7826086956522" x2="0.0" y2="384.7826086956522" style="stroke-width:2;stroke:black;" />
+<text x="-9" y="384.7826086956522" dy=".32em" text-anchor="end">40.0</text>
+<line x1="-5.0" y1="538.695652173913" x2="0.0" y2="538.695652173913" style="stroke-width:2;stroke:black;" />
+<text x="-9" y="538.695652173913" dy=".32em" text-anchor="end">10.0</text>
+</g></svg>
