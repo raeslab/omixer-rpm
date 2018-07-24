@@ -87,7 +87,7 @@ public class InferenceApp extends AbstractInferenceApp {
 				.desc("Number of threads to use when mapping the modules.\nDefaults to 1").hasArg().argName("THREADS")
 				.build());
 
-		options.addOption(Option.builder("i").longOpt("input").desc("Path to the input matrix or input directory with one file per sample").hasArg()
+		options.addOption(Option.builder("i").longOpt("input").desc("Path to the input matrix or input directory with one headerless file per sample").hasArg()
 				.argName("PATH").build());
 
 		options.addOption(Option.builder("o").longOpt("output-dir").desc("Path to the output directory").hasArg()
@@ -195,7 +195,7 @@ public class InferenceApp extends AbstractInferenceApp {
 			if (line.hasOption('i')) {
 				inputdir = new File(line.getOptionValue('i'));
 			} else {
-				throw new MissingArgumentException("Missing value for input directory");
+				throw new MissingArgumentException("Missing value for input matrix/directory");
 			}
 
 			if (line.hasOption('o')) {
@@ -245,7 +245,6 @@ public class InferenceApp extends AbstractInferenceApp {
 		long start = System.currentTimeMillis();
 		try {
 			final List<Module> referenceModules = ModuleParser.parseModuleFile(moduleFile);
-
 			ConcurrentHashMap<String, Modules> moduleInference = moduleManager.inferModules(inputdir,
 					moduleInferenceOptions, referenceModules);
 			// Check if the automatic threshold detection is required
@@ -287,7 +286,7 @@ public class InferenceApp extends AbstractInferenceApp {
 			app.log.error("Exception while reading input data: " + e.getMessage());
 			return;
 		} catch (ArrayIndexOutOfBoundsException e) {
-			app.log.error("Exception while reading input data. Please make sure you are using the correct input file format");
+			app.log.error("Exception while reading input. Please make sure you are using the correct annotation value (cf. --annotation description) for your input.");
 			return;
 		}
 		long time = System.currentTimeMillis() - start;

@@ -248,7 +248,7 @@ public class ModuleManagerSpecs extends Specification {
 		
 	}
 	
-	def "inferModules from Species matrix"() {
+	def "inferModules from Species matrix returns correct number of samples"() {
 		
 		setup:
 		manager.setInputFormat("2")
@@ -283,8 +283,40 @@ public class ModuleManagerSpecs extends Specification {
 		"MF0001_Sp1" | "MF0001" | "Sp1" | (1 + (2/2))/2 | 1
 		"MF0003_Sp2" | "MF0003" | "Sp2" | 12d/3d | 1
 	}
+	
+	def "inferModules from directory returns correct number of samples"() {
+		
+		when: "a directory with 2 input files is input"
+		manager.setInputFormat("1")
+		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_REACTION_BASED.displayName())
+		options.setNormalizeByLength(true)
+				
+		ConcurrentHashMap<String, Modules> inference = manager.inferModules(new File("src/test/resources/input_directory/"), options, referenceModules)
 
-	def "WithDistributedOrthologAbundance distributes KO abundances"() throws IOException {
+		then:"expect 2 samples to be returned"
+		inference.size() == 2
+
+		when: "cutoff is applied"
+		def inferenceS1 = inference.get("S1").toAboveCutoffList().groupBy{ it.getModuleId() }
+
+		then: "MF0001 and MF0003"
+		inferenceS1.size() == 2
+
+		when:
+		def module = inferenceS1.get(moduleId)[0]
+
+		then: "MF0001 and MF0003"
+		module.getModuleId() == moduleId
+		module.getCount() == count
+		module.getCoverage() == coverage
+
+		where:
+		moduleId | count | coverage
+		"MF0001" | (1 + (2/2))/2 | 1
+		"MF0003" | 12d/3d | 1
+	}
+
+	def "withDistributedOrthologAbundance distributes KO abundances"() throws IOException {
 
 		setup:
 		List<BasicFeature> orthologs = [new BasicFeature("feat1", null, "K00001", 2d), new BasicFeature("feat1", null, "K00002", 2d)]
