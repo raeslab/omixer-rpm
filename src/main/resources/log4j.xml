@@ -13,7 +13,7 @@
     <logger name="org.apache">
         <level value="WARN"/>
     </logger>
-   	<logger name="org.omixer.modules">
+   	<logger name="org.omixer.rpm">
         <level value="INFO"/>
     </logger>
       

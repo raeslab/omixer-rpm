@@ -1,37 +1,61 @@
 # Omixer-RPM
-### A tool to generate metabolic modules profiles from metagenomic samples.
+A **R**eference **P**athways **M**apper for turning metagenomic functional profiles into pathway/module profiles.
 
-Depends on Java8.
-
-usage: java -jar [omixer-rpm.jar](../../releases)  [-a <ANNOTATION>] [-c <COVERAGE>] [-d <FILE>] [-e <FORMAT>] [-h] [-i <PATH>] [--ignore-taxonomic-info] [-n] [-o <DIRECTORY>] [-s <SCORE-ESTIMATOR>] [-t <THREADS>] [--Xdistribute]
+#### Usage
+java -jar [omixer-rpm.jar](../../releases/latest)  [-a <ANNOTATION>] [-c <COVERAGE>] [-d <FILE>] [-e <FORMAT>] [-h] [-i <PATH>] [--ignore-taxonomic-info] [-n] [-o <DIRECTORY>] [-s <SCORE-ESTIMATOR>] [-t <THREADS>] [--Xdistribute]
 
 <pre>
  -a,--annotation <ANNOTATION>             Input file annotation.
-                                          Use 1 for orthologs only files or 2 for taxonomic annotation followed by orthologs.
-                                          Defaults to 1
- -c,--coverage <COVERAGE>                 The minimum coverage cut-off to accept a module [0.0 to 1.0].
-                                          Defaults to -1, where the coverage is learned from the coverage distribution of all modules
- -d,--database <FILE>                     The path to the modules database
- -e,--export-format <FORMAT>              The output file format.
-                                          Use 1 for single tab separated files containing module id, abundance and coverage. Use 2 for an abundance and a coverage matrices.
-                                          Defaults to 1.
- -h,--help                                Show this help message and exit
- -i,--input <PATH>                        Path to the input matrix or input directory with one file per sample
-    --ignore-taxonomic-info               Ignore taxonomic info from input file and infer modules for the whole metagenome instead
- -n,--normalize-by-length                 Divide module score by its length. When combined with a median estimator, missing reactions (score = 0 )
-                                          are included when estimating the median. If the estimated score equals zero then it is replaced by
-                                          the minimum observed reaction score. If this option is specified, score calculation is based only on
-                                          the number of observed reactions
- -o,--output-dir <DIRECTORY>              Path to the output directory
- -s,--score-estimator <SCORE-ESTIMATOR>   The score estimatore.
-                                          Accepted values are [median|average].
-                                          Defaults to median
- -t,--threads <THREADS>                   Number of threads to use when mapping the modules.
-                                          Defaults to 1
-    --Xdistribute                         Experimental feature - When an ortholog is shared by N modules then its abundance is divided by N.
+                              Use 1 for orthologs only files or 2 for taxonomic annotation followed by orthologs.
+                              Defaults to 1
+ -c,--coverage <COVERAGE>               The minimum coverage cut-off to accept a module [0.0 to 1.0].
+                              Defaults to -1, where the coverage is learned from the coverage distribution of all modules
+ -d,--database <FILE>               The path to the modules database
+ -e,--export-format <FORMAT>          The output file format.
+                              Use 1 for single tab separated files containing module id, abundance and coverage. 
+                              Use 2 for an abundance and a coverage matrices.
+                              Defaults to 1.
+ -h,--help                    Show this help message and exit
+ -i,--input <PATH>                  Path to the input matrix or input directory with one file per sample
+    --ignore-taxonomic-info   Ignore taxonomic info from input file and infer modules for the whole metagenome instead
+ -n,--normalize-by-length     Divide module score by its length. When combined with a median estimator, missing reactions (score = 0 )
+                              are included when estimating the median. If the estimated score equals zero then it is replaced by
+                              the minimum observed reaction score. If this option is specified, score calculation is based only on
+                              the number of observed reactions
+ -o,--output-dir <DIRECTORY>             Path to the output directory
+ -s,--score-estimator <SCORE-ESTIMATOR>        The score estimatore.
+                              Accepted values are [median|average].
+                              Defaults to median
+ -t,--threads <THREADS>                Number of threads to use when mapping the modules.
+                              Defaults to 1
+    --Xdistribute             Experimental feature - When an ortholog is shared by N modules then its abundance is divided by N.
 </pre>
 
-### License
+#### Database file format.
+The reference pathways database is a flat file where pathway/module reactions are tab-separated to indicate alternative
+reactions (OR operation), while return- and comma-separated reactions are all required for process completeness (AND operation). 
+Below is a snippet from the human gut metabolic modules (GMMs) database, described in *[Vieira-Silva et al. 2016](https://www.nature.com/articles/nmicrobiol201688)*.
+<pre>
+MF0001	arabinoxylan degradation
+K01209	K15921	K01181	K01198	K15531	K18205
+///
+MF0002	fructan degradation
+K03332	K01193
+///
+MF0003	pectin degradation I
+K01051
+K01184,K01213	K18650
+///
+</pre>
+You can find the complete example [here](https://github.com/raeslab/GMMs/blob/master/GMMs.v1.07.txt).
+KEGG Module pathways or custom databases formatted accordingly would also work.
+
+#### Citing Omixer-RPM
+Omixer-RPM was developed as part of [GOmixer](http://www.raeslab.org/gomixer/). If you use Omixer-RPM in your work please cite: <br />
+
+*Youssef Darzi, Gwen Falony, Sara Silva, Jeroen Raes. [Towards biome-specific analysis of meta-omics data, The ISME journal, 2015](https://www.nature.com/articles/ismej2015188)* 
+
+#### License
 [Academic Non-commercial Software License Agreement](../master/LICENSE)
 
-##### Developed by Youssef Darzi [(@omixer)](https://github.com/omixer)
+###### Developed by Youssef Darzi [(@omixer)](https://github.com/omixer)
