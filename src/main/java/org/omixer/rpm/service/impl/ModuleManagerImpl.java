@@ -136,7 +136,7 @@ public class ModuleManagerImpl implements ModuleManager {
 			stream.forEach(file -> {
 				List<BasicFeature> orthologs;
 				try {
-					orthologs = FileUtils.readCSV(file, Constants.TAB, 0, rowMapper);
+					orthologs = FileUtils.readCSV(file, 0, rowMapper);
 					List<Module> refMods = referenceModules.stream().map(x -> x.clone()).collect(Collectors.toList());
 					Modules modules = inferModules(orthologs, options, refMods);
 					// FIXME careful not to remove more than necessary
@@ -149,7 +149,7 @@ public class ModuleManagerImpl implements ModuleManager {
 			});
 
 		} else {
-			// Delegate logic to module manager that will decide how to load
+			// set MatrixLineProcessor according to input format
 			MatrixLineProcessor<BasicFeature> mlp = getInputFormat().equals("1") ? new FunctionLineProcessor() : new TaxonFunctionLineProcessor();
 			// reads matrix
 			Map<String, List<BasicFeature>> sampleOrthologs = FileUtils.readMatrix(input, Constants.TAB, mlp);
@@ -160,7 +160,9 @@ public class ModuleManagerImpl implements ModuleManager {
 			stream.forEach(entry -> {
 				// create a module list for each different process
 				List<Module> refMods = referenceModules.stream().map(x -> x.clone()).collect(Collectors.toList());
+				// do module inference
 				Modules modules = inferModules(entry.getValue(), options, refMods);
+				// put sample name => the current module inference, in the result
 				moduleInference.put(entry.getKey(), modules);
 			});
 		}
@@ -261,13 +263,11 @@ public class ModuleManagerImpl implements ModuleManager {
 	}
 	
 	protected Module optimizeModule(Module module, ModuleInferenceOptions options) {
-		// The part below is simply as the regular inference 
 		// generate alternative orthologs in a structure
 		List<List<List<Ortholog>>> allPaths = module.makeAllPaths();
 		// use a resolver to know which optimizer should be used
-
 		ModuleScoreCalculator optimizer = null;
-
+		
 		if (options.getAlgorithm()
 				.equals(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_REACTION_BASED.displayName())) {
 			optimizer = new ModuleAbundanceCoverageReactionMaximizer(options.isNormalizeByLength());
@@ -279,6 +279,9 @@ public class ModuleManagerImpl implements ModuleManager {
 			optimizer = new ModuleAbundanceCoverageMedianMaximizer(options.isNormalizeByLength());
 		}
 
+		
+		
+		
 		// call the optimizer
 		PathwaySummary bestPath = optimizer.computeBestScore(allPaths, options);
 
