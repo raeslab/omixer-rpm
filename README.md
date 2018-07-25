@@ -32,23 +32,36 @@ java -jar [omixer-rpm.jar](../../releases/latest)  [-a <ANNOTATION>] [-c <COVERA
 </pre>
 
 #### Database file format.
-The reference pathways database is a flat file where pathway/module reactions are tab-separated to indicate alternative
-reactions (OR operation), while return- and comma-separated reactions are all required for process completeness (AND operation). 
-Below is a snippet from the human gut metabolic modules (GMMs) database, described in *[Vieira-Silva et al. 2016](https://www.nature.com/articles/nmicrobiol201688)*.
+The reference pathways database is a flat file where pathway/module reactions are listed following their order in the pathway.
+Tab-separated reactions indicate alternative reactions (OR operation), while return- and comma-separated reactions 
+are all required for process completeness (AND operation). Below is a snippet from the human gut metabolic modules (GMMs)
+database, described in *[Vieira-Silva et al. 2016](https://www.nature.com/articles/nmicrobiol201688)*.
 <pre>
 MF0001	arabinoxylan degradation
 K01209	K15921	K01181	K01198	K15531	K18205
-///
-MF0002	fructan degradation
-K03332	K01193
 ///
 MF0003	pectin degradation I
 K01051
 K01184,K01213	K18650
 ///
+MF0103	mucin degradation
+K01186
+K05970
+K01132	K01135	K01137	K01205
+K01207	K12373	K14459
+K01205	K01207	K12373	K01227	K13714
+K01206
+///
 </pre>
 You can find the complete example [here](https://github.com/raeslab/GMMs/blob/master/GMMs.v1.07.txt).
 KEGG Module pathways or custom databases formatted accordingly would also work.
+
+#### Description
+As defined in the database snippet above, a metabolic module is a set of alternative ortholog combinations 
+that represent a cellular process. Given a metagenome, Omixer-RPM will assign for each module the combination of orthologs
+that will maximize its coverage (# observed steps / # defined steps), then derive its abundance as the median (or average) of orthologs
+abundance of the selected combination.
+
 
 #### Citing Omixer-RPM
 Omixer-RPM was developed as part of [GOmixer](http://www.raeslab.org/gomixer/). If you use Omixer-RPM in your work please cite: <br />
