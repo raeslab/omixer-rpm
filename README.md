@@ -58,9 +58,37 @@ KEGG Module pathways or custom databases formatted accordingly would also work.
 
 #### Description
 As defined in the database snippet above, a metabolic module is a set of alternative ortholog combinations 
-that represent a cellular process. Given a metagenome, Omixer-RPM will assign for each module the combination of orthologs
-that will maximize its coverage (# observed steps / # defined steps), then derive its abundance as the median (or average) of orthologs
-abundance of the selected combination.
+that represent a cellular process. Given a metagenome, Omixer-RPM will select the modules that pass a 
+user defined coverage (# observed steps / # defined steps) cutoff, then derives their abundance 
+by selecting, for each module, the combination of orthologs that maximize its abundance.
+
+For example, given the following module definition and profile
+<pre>
+I: Glucose -> R1 -> R2 -> R3 -> R4 -> R5 -> O: glyceraldehyde 3-phosphate
+R1: K00844 K00845
+R2: K01810 K06859 K13810 K15916
+R3: K00850 K16370
+R4: K01622 K01623 K01624 K11645 K16305 K16306
+R5: K01803
+</pre>
+<pre>
+K00844	10
+K00845	3
+K06859	7
+K13810	8
+K01804	12
+K01622	2
+K16370	5
+K00703	12
+K00863	15
+</pre>
+
+The two possible combinations are:
+<pre>
+A) K00844 (10) -> K13810 (8) -> K01622 (2) -> K16370 (5) -> NA
+B) K00845 (3)  -> K06859 (7) -> K01622 (2) -> K16370 (5) -> NA
+</pre>
+The coverage in this case is 4/5 but the average in A (25/5) is greater than in B (17/5), therefore the selected path is A and the abundance of the module is 5.
 
 
 #### Citing Omixer-RPM
