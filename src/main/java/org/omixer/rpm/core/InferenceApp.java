@@ -21,6 +21,7 @@ import org.omixer.rpm.model.Module;
 import org.omixer.rpm.model.ModuleCoverageDistribution;
 import org.omixer.rpm.model.ModuleInferenceOptions;
 import org.omixer.rpm.model.Modules;
+import org.omixer.rpm.model.enums.ModuleInferenceOptimizers;
 import org.omixer.rpm.model.enums.ScalingMethod;
 import org.omixer.rpm.model.io.MatrixWriter;
 import org.omixer.rpm.model.io.ModuleMatrixWriter;
@@ -41,7 +42,7 @@ public class InferenceApp extends AbstractInferenceApp {
 	public static final String EXEC_COMMAND = "java -jar " + TOOL_NAME + " ";
 	public static final String HEADER = "\n\nDESCRIPTION\n"
 			+ " Omixer-RPM\n A Reference Pathways Mapper for turning metagenomic functional profiles into pathway/module profiles\n\n"
-			+ "VERSION: 1.0 (13 June 2018)\n" + "AUTHOR: Youssef Darzi <youssef.darzi@gmail.com>\n\n"
+			+ "VERSION: 1.1-dev\n" + "AUTHOR: Youssef Darzi <youssef.darzi@gmail.com>\n\n"
 			+ "ARGUMENTS (Options starting with -X are non-standard and subject to change without notice.)\n\n";
 
 	public static final String FOOTER = "\nLicensed under an Academic Non-commercial Software License Agreement, https://github.com/raeslab/omixer-rpm/blob/master/LICENSE";
@@ -58,7 +59,7 @@ public class InferenceApp extends AbstractInferenceApp {
 				.hasArg().argName("COVERAGE").build());
 
 		options.addOption(Option.builder("s").longOpt("score-estimator")
-				.desc("The score estimatore.\nAccepted values are [median|average].\nDefaults to median").hasArg()
+				.desc("The score estimatore.\nAccepted values are [median|average|sum|min].\nDefaults to median").hasArg()
 				.argName("SCORE-ESTIMATOR").build());
 
 		options.addOption(Option.builder("n").longOpt("normalize-by-length")
@@ -149,7 +150,11 @@ public class InferenceApp extends AbstractInferenceApp {
 				String estimator = line.getOptionValue("score-estimator");
 
 				if ("average".equals(estimator)) {
-					algorithm = "ABUNDANCE_COVERAGE_REACTION_BASED";
+					algorithm = ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_REACTION_BASED.displayName();
+				} else if ("sum".equals(estimator)) {
+					algorithm = ModuleInferenceOptimizers.SUM.displayName();
+				} else if ("min".equals(estimator)) {
+					algorithm = ModuleInferenceOptimizers.MIN.displayName();
 				} else if (!"median".equals(estimator)) {
 					throw new IllegalArgumentException(estimator
 							+ " is not a valid value for score calculation. Please chose between median or average");

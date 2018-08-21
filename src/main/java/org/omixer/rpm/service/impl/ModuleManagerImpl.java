@@ -22,6 +22,8 @@ import org.omixer.rpm.model.Modules;
 import org.omixer.rpm.model.Ortholog;
 import org.omixer.rpm.model.PathwaySummary;
 import org.omixer.rpm.model.enums.ModuleInferenceOptimizers;
+import org.omixer.rpm.model.optimizers.ModuleAbundanceCoverageAbundanceMinimizer;
+import org.omixer.rpm.model.optimizers.ModuleAbundanceCoverageAbundanceSumMaximizer;
 import org.omixer.rpm.model.optimizers.ModuleAbundanceCoverageMedianMaximizer;
 import org.omixer.rpm.model.optimizers.ModuleAbundanceCoverageOrthologMaximizer;
 import org.omixer.rpm.model.optimizers.ModuleAbundanceCoverageReactionMaximizer;
@@ -277,11 +279,12 @@ public class ModuleManagerImpl implements ModuleManager {
 		} else if (options.getAlgorithm()
 				.equals(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_MEDIAN_BASED.displayName())) {
 			optimizer = new ModuleAbundanceCoverageMedianMaximizer(options.isNormalizeByLength());
+		} else if (options.getAlgorithm().equals(ModuleInferenceOptimizers.SUM.displayName())) {
+			optimizer = new ModuleAbundanceCoverageAbundanceSumMaximizer(options.isNormalizeByLength());
+		} else if (options.getAlgorithm().equals(ModuleInferenceOptimizers.MIN.displayName())) {
+			optimizer = new ModuleAbundanceCoverageAbundanceMinimizer(options.isNormalizeByLength());
 		}
 
-		
-		
-		
 		// call the optimizer
 		PathwaySummary bestPath = optimizer.computeBestScore(allPaths, options);
 

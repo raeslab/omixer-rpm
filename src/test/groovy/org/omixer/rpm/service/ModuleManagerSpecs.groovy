@@ -163,6 +163,84 @@ public class ModuleManagerSpecs extends Specification {
 		modules.get(0).getCoverage() == 1
 		
 	}
+		
+	def "inferModules returns correct coverage and sum"() {
+		
+		setup:
+		List<BasicFeature> orthologs
+		options.setNormalizeByLength(false)
+		options.setAlgorithm(ModuleInferenceOptimizers.SUM.displayName())
+		
+		when: "A one step module is matched"
+		orthologs = [new BasicFeature("feat1", null, "K00012", 8d)]
+		Modules modulePrediction = manager.inferModules(orthologs, options, referenceModules);
+		List<Module> modules = modulePrediction.toAboveCutoffList();
+		
+		then: "Only MF0004 is selected"
+		modules.size() == 1
+		modules[0].getModuleId() == "MF0004"
+		
+		and: "module count equals ortholog count"
+		modules.get(0).getCount() == 8d
+		
+		and: "a 100% coverage"
+		modules.get(0).getCoverage() == 1d
+		
+		
+		when: "Every step of MF0003 has a KO"
+		orthologs = [["K00005", 2d], ["K00010", 8d], ["K00011", 10d]].collect{new BasicFeature("feat1", null, it[0], it[1])}
+		modulePrediction = manager.inferModules(orthologs, options, referenceModules);
+		modules = modulePrediction.toAboveCutoffList();
+		
+		then: "MF0003 is selected"
+		modules.size() == 1
+		modules[0].getModuleId() == "MF0003"
+		
+		and: "Its count equals the Sum of {2,8,10}"
+		modules.get(0).getCount() == 20
+		
+		and: "it has 100% coverage"
+		modules.get(0).getCoverage() == 1
+	}
+	
+	def "inferModules returns correct coverage and min"() {
+		
+		setup:
+		List<BasicFeature> orthologs
+		options.setNormalizeByLength(false)
+		options.setAlgorithm(ModuleInferenceOptimizers.MIN.displayName())
+		
+		when: "A one step module is matched"
+		orthologs = [new BasicFeature("feat1", null, "K00012", 8d)]
+		Modules modulePrediction = manager.inferModules(orthologs, options, referenceModules);
+		List<Module> modules = modulePrediction.toAboveCutoffList();
+		
+		then: "Only MF0004 is selected"
+		modules.size() == 1
+		modules[0].getModuleId() == "MF0004"
+		
+		and: "module count equals ortholog count"
+		modules.get(0).getCount() == 8d
+		
+		and: "a 100% coverage"
+		modules.get(0).getCoverage() == 1d
+		
+		
+		when: "Every step of MF0003 has a KO"
+		orthologs = [["K00005", 2d], ["K00010", 8d], ["K00011", 10d]].collect{new BasicFeature("feat1", null, it[0], it[1])}
+		modulePrediction = manager.inferModules(orthologs, options, referenceModules);
+		modules = modulePrediction.toAboveCutoffList();
+		
+		then: "MF0003 is selected"
+		modules.size() == 1
+		modules[0].getModuleId() == "MF0003"
+		
+		and: "Its count equals the Minimum of {2,8,10}"
+		modules.get(0).getCount() == 2
+		
+		and: "it has 100% coverage"
+		modules.get(0).getCoverage() == 1
+	}
 	
 	def "inferModules replaces 0 median by the trimmed minimum"() {
 		
@@ -186,7 +264,7 @@ public class ModuleManagerSpecs extends Specification {
 		     true         |  1   |  2d   | 3d/7d    | "Instead of the median of {0, 0, 0, 0, 2, 3, 8}, then trimmed minimum (min({2, 3, 8})) is returned"
 		     false        |  1   |  3d   | 3d/7d    | "module count is the median of {2, 3, 8}"
 	}
-		
+	
 	def "inferModules from matrix and NormalizeByLength is true"(){
 		
 		when: "modules are inferred from a matrix"
