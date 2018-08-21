@@ -106,8 +106,7 @@ public class InferenceApp extends AbstractInferenceApp {
 		String outFormat = "1";
 		String threads = "1";
 		boolean normalizeByLength = false;
-		// Assume per taxon unless equals annotation equals 1 or ignore-taxonomic-info is set
-		boolean isPerTaxon = true;
+		boolean isPerTaxon = false;
 		boolean isDistributeOrhologAbundance = false;
 
 		ScalingMethod scalingMethod = ScalingMethod.NONE;
@@ -173,8 +172,8 @@ public class InferenceApp extends AbstractInferenceApp {
 					throw new IllegalArgumentException("Annotation (" + annotation
 							+ ") is not a valid annotation. Please choose one of the available annotations");
 				}
-				if (annotation.equals("1")) {
-					isPerTaxon = false;
+				if (annotation.equals("2")) {
+					isPerTaxon = true;
 				}
 			}
 
