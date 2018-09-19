@@ -53,7 +53,7 @@ K01205	K01207	K12373	K01227	K13714
 K01206
 ///
 </pre>
-You can find the complete example [here](https://github.com/raeslab/GMMs/blob/master/GMMs.v1.07.txt).
+You can find the complete database [here](https://github.com/raeslab/GMMs/blob/master/GMMs.v1.07.txt).
 KEGG Module pathways or custom databases formatted accordingly would also work.
 
 #### Description
