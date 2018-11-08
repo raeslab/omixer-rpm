@@ -93,6 +93,8 @@ B) K00845 (3)  -> K06859 (7) -> K01622 (2) -> K16370 (5) -> NA
 </pre>
 The coverage in this case is 4/5 but the average in A (25/5) is greater than in B (17/5), therefore the selected path is A and the abundance of the module is 5.
 
+#### Using in R
+The [omixer-rpmR](https://github.com/omixer/omixer-rpmR) library is available for seamless integration with R.
 
 #### Citing Omixer-RPM
 Omixer-RPM was developed as part of [GOmixer](http://www.raeslab.org/gomixer/). If you use Omixer-RPM in your work please cite: <br />
