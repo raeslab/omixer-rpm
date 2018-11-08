@@ -31,6 +31,9 @@ java -jar [omixer-rpm.jar](../../releases/latest)  [-a <ANNOTATION>] [-c <COVERA
     --Xdistribute             Experimental feature - When an ortholog is shared by N modules then its abundance is divided by N.
 </pre>
 
+#### Input file format.
+Input files are TAB delimited matrices of KEGG KO annotated functional profiles. An optional taxonomic annotation could also be included. For examples please refer to [KO matrix](https://github.com/raeslab/omixer-rpm/blob/master/src/test/resources/matrix.tsv) and [Taxon KO matrix](https://github.com/raeslab/omixer-rpm/blob/master/src/test/resources/taxon_matrix.tsv).
+
 #### Database file format.
 The reference pathways database is a flat file where pathway/module reactions are listed following their order in the pathway.
 Tab-separated reactions indicate alternative reactions (OR operation), while return- and comma-separated reactions 
