@@ -60,7 +60,9 @@ public class ModuleTaxonomyMatrixWriter extends MatrixWriter {
 			String header = samples.stream().reduce("Taxon\tModule", (a, b) -> (a + Constants.TAB + b));
 			out.write(header + Constants.NEW_LINE);
 			/**
-			 * Think of another way to optimize. - Could also reduce the search
+			 * FIXME this is the most consuming part for now.
+			 * TODO Think of another way to optimize. 
+			 * - Could also reduce the search
 			 * space after each iteration by removing matched object - Or sort
 			 * and compare based on sort to ensure next objext is the closets to
 			 * top object

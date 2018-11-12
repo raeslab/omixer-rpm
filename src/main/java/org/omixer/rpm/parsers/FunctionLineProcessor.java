@@ -30,7 +30,7 @@ public class FunctionLineProcessor extends AbstractLineProcessor {
 	}
 	
 	protected BasicFeature makeBasicFeature(String[] tokens, Double count) {
-		return new BasicFeature(tokens[0], null, tokens[0], count);
+		return new BasicFeature(null, tokens[0], count);
 	}
 	
 	/**

@@ -7,7 +7,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 /**
  * A basic feature with name, taxon, score, and one other function so far
- * TODO add an annotation Map to allow for more that one annotation
+ * TODO add an annotation Map to allow for more than 1 annotation
  * 
  * @author <a href="mailto:youssef.darzi@gmail.com">Youssef Darzi</a>
  * 
@@ -22,7 +22,6 @@ public class BasicFeature {
 	 * 
 	 */
 	private Long id;
-	private String featureId;
 	private String function;
 	private Double count;
 	private String taxon;
@@ -35,9 +34,8 @@ public class BasicFeature {
 	 * @param count
 	 * @param taxon
 	 */
-	public BasicFeature(String featureId, String taxon, String function, Double count) {
+	public BasicFeature(String taxon, String function, Double count) {
 		super();
-		this.featureId = featureId;
 		this.function = function;
 		this.count = count;
 		this.taxon = taxon;
@@ -60,13 +58,6 @@ public class BasicFeature {
 	 */
 	public String getFunction() {
 		return function;
-	}
-
-	/**
-	 * @return the id
-	 */
-	public String getFeatureId() {
-		return featureId;
 	}
 
 	/**
@@ -93,14 +84,6 @@ public class BasicFeature {
 	 */
 	public void setFunction(String function) {
 		this.function = function;
-	}
-
-	/**
-	 * @param featureId
-	 *            the id to set
-	 */
-	public void setFeatureId(String featureId) {
-		this.featureId = featureId;
 	}
 
 	/**
@@ -136,7 +119,6 @@ public class BasicFeature {
 	public String toString() {
 		ToStringBuilder tsb = new ToStringBuilder(this,
 				ToStringStyle.SHORT_PREFIX_STYLE);
-		tsb.append(featureId);
 		tsb.append(taxon);
 		tsb.append(function);
 		tsb.append(count);
@@ -156,7 +138,6 @@ public class BasicFeature {
 		BasicFeature bf = (BasicFeature) o;
 		EqualsBuilder eb = new EqualsBuilder();
 
-		eb.append(getFeatureId(), bf.getFeatureId());
 		eb.append(getTaxon(), bf.getTaxon());
 		eb.append(getFunction(), bf.getFunction());
 		eb.append(getCount(), bf.getCount());
@@ -167,7 +148,6 @@ public class BasicFeature {
 	@Override
 	public int hashCode() {
 		HashCodeBuilder hcb = new HashCodeBuilder(11, 31);
-		hcb.append(featureId);
 		hcb.append(taxon);
 		hcb.append(function);
 		hcb.append(count);
