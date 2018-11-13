@@ -28,21 +28,24 @@ public class ModuleAbundanceCoverageAbundanceMinimizer extends ModuleAbundanceCo
 	 */
 	protected PathwaySummary computePathScoreAndCoverage(List<List<Ortholog>> path) {
 
-		double pathLength = 0;
+		double pathLength = path.size();
 		double presentOrthologs = 0;
 		// use the minimum
 		double pathCount = 0;
 
 		for (List<Ortholog> step : path) {
+			boolean hasStep = false;
 			for (Ortholog ortholog : step) {
 				if (ortholog.getCount() > 0) { 
-					// if smaller than current min then set to current ortholog value
-					if (ortholog.getCount() <  pathCount) {
+					// if first observation or smaller than current min then set to current ortholog value
+					if (presentOrthologs == 0 || ortholog.getCount() <  pathCount) {
 						pathCount = ortholog.getCount();
 					}
-					presentOrthologs++;
+					hasStep = true;
 				}
-				pathLength++;
+			}
+			if (hasStep) {
+				presentOrthologs++;
 			}
 		}
 

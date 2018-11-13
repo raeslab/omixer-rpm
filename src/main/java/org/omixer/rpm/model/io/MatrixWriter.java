@@ -28,4 +28,8 @@ public abstract class MatrixWriter {
 
 	public abstract void writeMatrix(Map<String, Modules> moduleInference, File outfile, Function<Module, Double> f)
 			throws IOException;
+	
+	public abstract void exportModules(Map<String, Modules> moduleInference, File outCounts, File outCoverage)
+			throws IOException;
+	
 }

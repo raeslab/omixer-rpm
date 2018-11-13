@@ -24,7 +24,7 @@ java -jar [omixer-rpm.jar](../../releases/latest)  [-a <ANNOTATION>] [-c <COVERA
                               the number of observed reactions
  -o,--output-dir <DIRECTORY>             Path to the output directory
  -s,--score-estimator <SCORE-ESTIMATOR>        The score estimatore.
-                              Accepted values are [median|average].
+                              Accepted values are [median|average|sum|min].
                               Defaults to median
  -t,--threads <THREADS>                Number of threads to use when mapping the modules.
                               Defaults to 1

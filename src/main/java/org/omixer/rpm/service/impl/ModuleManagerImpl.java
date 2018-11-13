@@ -15,6 +15,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.omixer.rpm.model.BasicFeature;
 import org.omixer.rpm.model.Module;
 import org.omixer.rpm.model.ModuleInferenceOptions;
@@ -22,6 +24,8 @@ import org.omixer.rpm.model.Modules;
 import org.omixer.rpm.model.Ortholog;
 import org.omixer.rpm.model.PathwaySummary;
 import org.omixer.rpm.model.enums.ModuleInferenceOptimizers;
+import org.omixer.rpm.model.optimizers.ModuleAbundanceCoverageAbundanceMinimizer;
+import org.omixer.rpm.model.optimizers.ModuleAbundanceCoverageAbundanceSumMaximizer;
 import org.omixer.rpm.model.optimizers.ModuleAbundanceCoverageMedianMaximizer;
 import org.omixer.rpm.model.optimizers.ModuleAbundanceCoverageOrthologMaximizer;
 import org.omixer.rpm.model.optimizers.ModuleAbundanceCoverageReactionMaximizer;
@@ -43,6 +47,8 @@ import org.omixer.utils.utils.FileUtils;
  */
 public class ModuleManagerImpl implements ModuleManager {
 
+	protected final Log log = LogFactory.getLog(getClass());
+	
 	// use 1 as default
 	private String inputFormat = "1";
 	boolean concurent;
@@ -87,19 +93,21 @@ public class ModuleManagerImpl implements ModuleManager {
 			// Do inference per Taxon after Mapping on Taxon Id
 			Map<String, List<BasicFeature>> orthologMap = orthologs.stream()
 					.collect(Collectors.groupingBy(BasicFeature::getTaxon));
-
+			// Get an iterator over taxonomic entries
+			List<String> taxa = new ArrayList<>(orthologMap.keySet());
+			
 			allModules.setCoverageCutoff(options.getCoverage());
-			for (Entry<String, List<BasicFeature>> entry : orthologMap.entrySet()) {
-				
+			// iterate over taxa then remove BasicFeature for each taxa after inference
+			for (String taxon : taxa) {
 				Modules taxonMondules = null;
 				if (options.isDistributeOrhologAbundance()) {
-					taxonMondules = inferModulesWithDistributedOrthologAbundance(entry.getValue(), options, modules);
+					taxonMondules = inferModulesWithDistributedOrthologAbundance(orthologMap.remove(taxon), options, modules);
 				} else {
-					taxonMondules = inferModulesCore(entry.getValue(), options, modules);
+					taxonMondules = inferModulesCore(orthologMap.remove(taxon), options, modules);
 				}
 				
 				for (Module module : taxonMondules.getModules()) {
-					module.setTaxon(entry.getKey());
+					module.setTaxon(taxon);
 				}
 				allModules.addModules(taxonMondules);
 			}
@@ -144,27 +152,46 @@ public class ModuleManagerImpl implements ModuleManager {
 				} catch (IOException e) {
 					throw new RuntimeException(
 							"Exception while reading " + file.getAbsolutePath() + " " + e.getMessage());
-
 				}
 			});
 
 		} else {
 			// set MatrixLineProcessor according to input format
 			MatrixLineProcessor<BasicFeature> mlp = getInputFormat().equals("1") ? new FunctionLineProcessor() : new TaxonFunctionLineProcessor();
+			
+			
+			/*
+			 *  TODO use a filter to skip lines with KOs not in the reference database
+			 *  0) After splitting decide if KO is to be kept or not
+			 *  1) replace the split by a RegExpr that extracts the KO => split only if required
+			 *  
+			 */
+			
+			
 			// reads matrix
+			long start = System.currentTimeMillis();
 			Map<String, List<BasicFeature>> sampleOrthologs = FileUtils.readMatrix(input, Constants.TAB, mlp);
-			// create a stream to process the data
+			
+			log.debug("Loaded samples in " + ((System.currentTimeMillis() - start)/1000));
+			
+			// create a stream to process the data per samples
 			Stream<Entry<String, List<BasicFeature>>> stream = isConcurrent()
 					? sampleOrthologs.entrySet().parallelStream() : sampleOrthologs.entrySet().stream();
+					
+			start = System.currentTimeMillis();
 			// infer the modules
 			stream.forEach(entry -> {
 				// create a module list for each different process
 				List<Module> refMods = referenceModules.stream().map(x -> x.clone()).collect(Collectors.toList());
 				// do module inference
+				
+				// TODO check if removal of orthologs here will save memory
+				
 				Modules modules = inferModules(entry.getValue(), options, refMods);
 				// put sample name => the current module inference, in the result
 				moduleInference.put(entry.getKey(), modules);
 			});
+			log.debug("Inferred modules in " + ((System.currentTimeMillis() - start)/1000));
 		}
 		return moduleInference;
 	}
@@ -264,6 +291,10 @@ public class ModuleManagerImpl implements ModuleManager {
 	
 	protected Module optimizeModule(Module module, ModuleInferenceOptions options) {
 		// generate alternative orthologs in a structure
+		/*
+		 * FIXME avoid computing all paths for every instance of a module template
+		 * Use some sort of a matrix or a better data structure to hold all the paths
+		 */
 		List<List<List<Ortholog>>> allPaths = module.makeAllPaths();
 		// use a resolver to know which optimizer should be used
 		ModuleScoreCalculator optimizer = null;
@@ -277,11 +308,12 @@ public class ModuleManagerImpl implements ModuleManager {
 		} else if (options.getAlgorithm()
 				.equals(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_MEDIAN_BASED.displayName())) {
 			optimizer = new ModuleAbundanceCoverageMedianMaximizer(options.isNormalizeByLength());
+		} else if (options.getAlgorithm().equals(ModuleInferenceOptimizers.SUM.displayName())) {
+			optimizer = new ModuleAbundanceCoverageAbundanceSumMaximizer(options.isNormalizeByLength());
+		} else if (options.getAlgorithm().equals(ModuleInferenceOptimizers.MIN.displayName())) {
+			optimizer = new ModuleAbundanceCoverageAbundanceMinimizer(options.isNormalizeByLength());
 		}
 
-		
-		
-		
 		// call the optimizer
 		PathwaySummary bestPath = optimizer.computeBestScore(allPaths, options);
 
