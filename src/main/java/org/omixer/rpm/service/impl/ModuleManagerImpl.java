@@ -15,6 +15,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.omixer.rpm.model.BasicFeature;
 import org.omixer.rpm.model.Module;
 import org.omixer.rpm.model.ModuleInferenceOptions;
@@ -45,6 +47,8 @@ import org.omixer.utils.utils.FileUtils;
  */
 public class ModuleManagerImpl implements ModuleManager {
 
+	protected final Log log = LogFactory.getLog(getClass());
+	
 	// use 1 as default
 	private String inputFormat = "1";
 	boolean concurent;
@@ -168,7 +172,7 @@ public class ModuleManagerImpl implements ModuleManager {
 			long start = System.currentTimeMillis();
 			Map<String, List<BasicFeature>> sampleOrthologs = FileUtils.readMatrix(input, Constants.TAB, mlp);
 			
-			System.out.println("Loaded samples in " + ((System.currentTimeMillis() - start)/1000));
+			log.debug("Loaded samples in " + ((System.currentTimeMillis() - start)/1000));
 			
 			// create a stream to process the data per samples
 			Stream<Entry<String, List<BasicFeature>>> stream = isConcurrent()
@@ -187,7 +191,7 @@ public class ModuleManagerImpl implements ModuleManager {
 				// put sample name => the current module inference, in the result
 				moduleInference.put(entry.getKey(), modules);
 			});
-			System.out.println("inferred modules in " + ((System.currentTimeMillis() - start)/1000));
+			log.debug("Inferred modules in " + ((System.currentTimeMillis() - start)/1000));
 		}
 		return moduleInference;
 	}

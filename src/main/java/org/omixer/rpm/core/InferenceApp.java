@@ -282,9 +282,8 @@ public class InferenceApp extends AbstractInferenceApp {
 				File outCounts = new File(outputDir, "modules.tsv");
 				File outCoverage = new File(outputDir, "modules-coverage.tsv");
 				MatrixWriter matrixWriter = (annotation.equals("2") && isPerTaxon) ? new ModuleTaxonomyMatrixWriter() : new ModuleMatrixWriter();
-				matrixWriter.writeCounts(moduleInference, outCounts);
-				matrixWriter.writeCoverage(moduleInference, outCoverage);
-				
+				// exportModules in one go instead of iterating uselessly twice
+				matrixWriter.exportModules(moduleInference, outCounts, outCoverage);
 			}
 		} catch (IOException | IncorrectNumberOfEntriesException e) {
 			app.log.error("Exception while reading input data: " + e.getMessage());

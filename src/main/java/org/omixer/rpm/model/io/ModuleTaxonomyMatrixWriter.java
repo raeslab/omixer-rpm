@@ -18,22 +18,25 @@ import org.omixer.rpm.model.Modules;
 import org.omixer.utils.Constants;
 
 public class ModuleTaxonomyMatrixWriter extends MatrixWriter {
-	
-	public void writeMatrix(Map<String, Modules> moduleInference, File outfile, Function<Module, Double> f) throws IOException {
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.omixer.rpm.model.io.MatrixWriter#writeMatrix(java.util.Map, java.io.File, java.util.function.Function)
+	 */
+	public void writeMatrix(Map<String, Modules> moduleInference, File outfile, Function<Module, Double> f)
+			throws IOException {
 		// Map of all observed combinations of taxa and modules
 		Map<String, Set<String>> taxaModules = new HashMap<>();
-
-		/**
-		 * As the module space is very small i.e max 120 modules. For a 1000
-		 * samples we have 120000 objects to store which is nothing. So add all
-		 * the Modules to a list => put species_ko into hash => iterate and save
-		 * sample/features
-		 */
-		// generate the Observed taxonModules
+		// Map of modules by taxon and moduleId for a quick lookup
+		Map<String, Map<String, Module>> sampleTaxonModules = new HashMap<>();
+		// generate the Observed taxonModules, as row names for the matrix
 		for (Entry<String, Modules> entry : moduleInference.entrySet()) {
+			// map modules by taxon and moduleId
+			Map<String, Module> taxonMods = new HashMap<>();
+			sampleTaxonModules.put(entry.getKey(), taxonMods);
+			// retain above cutoff modules
 			List<Module> modules = entry.getValue().toAboveCutoffList();
-			// all modules are above cutoff and there is no need to
-			// filter them anymore
+			// set the new modules
 			entry.getValue().setModules(modules);
 			for (Module module : modules) {
 				String taxon = module.getTaxon();
@@ -47,47 +50,117 @@ public class ModuleTaxonomyMatrixWriter extends MatrixWriter {
 					taxaModules.put(taxon, taxonModules);
 				}
 				taxonModules.add(module.getModuleId());
+				taxonMods.put(taxon + module.getModuleId() , module);
 			}
 		}
 
 		/*
-		 * The number of samples is known, so write header For each observed
-		 * entry < find observed value
+		 * The number of samples is known, so write header For each observed entry <
+		 * find observed value
 		 */
 		try (BufferedWriter out = new BufferedWriter(new FileWriter(outfile))) {
 			List<String> samples = moduleInference.keySet().stream().collect(Collectors.toList());
 			// output header
 			String header = samples.stream().reduce("Taxon\tModule", (a, b) -> (a + Constants.TAB + b));
 			out.write(header + Constants.NEW_LINE);
-			/**
-			 * FIXME this is the most consuming part for now.
-			 * TODO Think of another way to optimize. 
-			 * - Could also reduce the search
-			 * space after each iteration by removing matched object - Or sort
-			 * and compare based on sort to ensure next objext is the closets to
-			 * top object
-			 */
-
-			// output for each features
 			// each taxon
+			// TODO remove each entry after iteration
 			for (Entry<String, Set<String>> taxonModules : taxaModules.entrySet()) {
 				// each module
 				for (String observedModule : taxonModules.getValue()) {
-					String outputString = taxonModules.getKey() + Constants.TAB + observedModule;
+					String countOutputString = taxonModules.getKey() + Constants.TAB + observedModule;
 					// each sample
-					for (Entry<String, Modules> entry : moduleInference.entrySet()) {
+					for (String sample : samples) {
+						Module module = sampleTaxonModules.get(sample).remove(taxonModules.getKey() + observedModule);
 						Double count = Constants.ZERO;
-						for (Module module : entry.getValue().getModules()) {
-							if (taxonModules.getKey().equals(module.getTaxon())
-									&& module.getModuleId().equals(observedModule)) {
-								count = f.apply(module);
-								break;
-							}
+						
+						if (module != null) {
+							count = f.apply(module);
 						}
-						outputString += Constants.TAB + count;
+						countOutputString += Constants.TAB + count;
 					}
-					out.write(outputString);
+					out.write(countOutputString);
 					out.newLine();
+				}
+			}
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.omixer.rpm.model.io.MatrixWriter#exportModules(java.util.Map,
+	 * java.io.File, java.io.File)
+	 */
+	@Override
+	public void exportModules(Map<String, Modules> moduleInference, File outCounts, File outCoverage)
+			throws IOException {
+		// Map of all observed combinations of taxa and modules
+		Map<String, Set<String>> taxaModules = new HashMap<>();
+		// Map of modules by taxon and moduleId for a quick lookup
+		Map<String, Map<String, Module>> sampleTaxonModules = new HashMap<>();
+		// generate the Observed taxonModules, as row names for the matrix
+		for (Entry<String, Modules> entry : moduleInference.entrySet()) {
+			// map modules by taxon and moduleId
+			Map<String, Module> taxonMods = new HashMap<>();
+			sampleTaxonModules.put(entry.getKey(), taxonMods);
+			// retain above cutoff modules
+			List<Module> modules = entry.getValue().toAboveCutoffList();
+			// set the new modules
+			entry.getValue().setModules(modules);
+			for (Module module : modules) {
+				String taxon = module.getTaxon();
+				// make sure it is not null
+				if (taxon == null) {
+					taxon = Constants.EMPTY_STRING;
+				}
+				Set<String> taxonModules = taxaModules.get(taxon);
+				if (taxonModules == null) {
+					taxonModules = new HashSet<>();
+					taxaModules.put(taxon, taxonModules);
+				}
+				taxonModules.add(module.getModuleId());
+				taxonMods.put(taxon + module.getModuleId() , module);
+			}
+		}
+
+		/*
+		 * The number of samples is known, so write header For each observed entry <
+		 * find observed value
+		 */
+		try (BufferedWriter countOut = new BufferedWriter(new FileWriter(outCounts));
+				BufferedWriter coverageOut = new BufferedWriter(new FileWriter(outCoverage))) {
+			List<String> samples = moduleInference.keySet().stream().collect(Collectors.toList());
+			// output header
+			String header = samples.stream().reduce("Taxon\tModule", (a, b) -> (a + Constants.TAB + b));
+			countOut.write(header + Constants.NEW_LINE);
+			coverageOut.write(header + Constants.NEW_LINE);
+			// each taxon
+			// TODO remove each entry after iteration
+			for (Entry<String, Set<String>> taxonModules : taxaModules.entrySet()) {
+				// each module
+				for (String observedModule : taxonModules.getValue()) {
+					String countOutputString = taxonModules.getKey() + Constants.TAB + observedModule;
+					String coverageOutputString = countOutputString;
+					// each sample
+					for (String sample : samples) {
+						Module module = sampleTaxonModules.get(sample).remove(taxonModules.getKey() + observedModule);
+						Double count = Constants.ZERO;
+						Double coverage = Constants.ZERO;
+						
+						if (module != null) {
+							count = module.getCount();
+							coverage = module.getCoverage();
+						}
+
+						countOutputString += Constants.TAB + count;
+						coverageOutputString += Constants.TAB + coverage;
+					}
+					countOut.write(countOutputString);
+					countOut.newLine();
+
+					coverageOut.write(coverageOutputString);
+					coverageOut.newLine();
 				}
 			}
 		}

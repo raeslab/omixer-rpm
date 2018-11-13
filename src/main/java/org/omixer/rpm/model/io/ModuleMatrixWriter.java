@@ -56,9 +56,9 @@ public class ModuleMatrixWriter extends MatrixWriter {
 			// each module
 			for (String observedModule : observedModules) {
 				String outputString = observedModule;
-				for (Entry<String, Modules> entry : moduleInference.entrySet()) {
+				for (String sample : samples) {
 					Double count = Constants.ZERO;
-					for (Module module : entry.getValue().getModules()) {
+					for (Module module : moduleInference.get(sample).getModules()) {
 						if (module.getModuleId().equals(observedModule)) {
 							count = f.apply(module);
 							break;
@@ -70,5 +70,18 @@ public class ModuleMatrixWriter extends MatrixWriter {
 				out.newLine();
 			}
 		}
+	}
+
+	/* 
+	 * Simply delegates to writeMatrix for now
+	 * 
+	 * (non-Javadoc)
+	 * @see org.omixer.rpm.model.io.MatrixWriter#exportModules(java.util.Map, java.io.File, java.io.File)
+	 */
+	@Override
+	public void exportModules(Map<String, Modules> moduleInference, File outCounts, File outCouverage)
+			throws IOException {
+		writeCounts(moduleInference, outCounts);
+		writeCoverage(moduleInference, outCouverage);
 	}
 }
