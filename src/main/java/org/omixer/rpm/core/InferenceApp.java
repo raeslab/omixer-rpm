@@ -42,7 +42,7 @@ public class InferenceApp extends AbstractInferenceApp {
 	public static final String EXEC_COMMAND = "java -jar " + TOOL_NAME + " ";
 	public static final String HEADER = "\n\nDESCRIPTION\n"
 			+ " Omixer-RPM\n A Reference Pathways Mapper for turning metagenomic functional profiles into pathway/module profiles\n\n"
-			+ "VERSION: 1.1-dev\n" + "AUTHOR: Youssef Darzi <youssef.darzi@gmail.com>\n\n"
+			+ "VERSION: 1.1\n" + "AUTHOR: Youssef Darzi <youssef.darzi@gmail.com>\n\n"
 			+ "ARGUMENTS (Options starting with -X are non-standard and subject to change without notice.)\n\n";
 
 	public static final String FOOTER = "\nLicensed under an Academic Non-commercial Software License Agreement, https://github.com/raeslab/omixer-rpm/blob/master/LICENSE";
