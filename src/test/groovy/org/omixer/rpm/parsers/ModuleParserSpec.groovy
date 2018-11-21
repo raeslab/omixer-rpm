@@ -14,7 +14,7 @@ public class ModuleParserSpec extends Specification {
 	def "parseModuleFile parses the flat file correctly"() {
 		
 		setup: "Read a module database"
-		List<Module> modules = ModuleParser.parseModuleFile(new File("src/test/resources/module.list"));
+		List<Module> modules = ModuleParser.parseModuleFile(new File("src/test/resources/module.list"))
 		
 		expect: "121 module read" 
 		modules.size() == 121

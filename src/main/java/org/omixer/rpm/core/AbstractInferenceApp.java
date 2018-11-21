@@ -58,7 +58,7 @@ public abstract class AbstractInferenceApp {
 		if (format.equals("1")) {
 			header = MODULE_FILE_HEADER;
 			writer = MODULE_FILE_WRITER;
-		} else if (format.equals("2")) {
+		} else if (format.equals("2") || format.equals("h2")) {
 			header = MODULE_TAXON_FILE_HEADER;
 			writer = TAXON_MODULE_FILE_WRITER;
 		}

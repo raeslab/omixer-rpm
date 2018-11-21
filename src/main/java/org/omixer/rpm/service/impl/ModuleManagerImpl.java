@@ -32,6 +32,7 @@ import org.omixer.rpm.model.optimizers.ModuleAbundanceCoverageReactionMaximizer;
 import org.omixer.rpm.model.optimizers.ModuleScoreCalculator;
 import org.omixer.rpm.parsers.FunctionLineProcessor;
 import org.omixer.rpm.parsers.FunctionRowMapper;
+import org.omixer.rpm.parsers.TaxonFunctionHumannLineProcessor;
 import org.omixer.rpm.parsers.TaxonFunctionLineProcessor;
 import org.omixer.rpm.parsers.TaxonFunctionRowMapper;
 import org.omixer.rpm.service.ModuleManager;
@@ -123,12 +124,12 @@ public class ModuleManagerImpl implements ModuleManager {
 		return allModules;
 	}
 	
+	/**
+	 * Current possible values for iput format are 1 (orthologs), 2(orthologs+taxa), h2(humann2 matrix)
+	 */
 	public ConcurrentHashMap<String, Modules> inferModules(File input, ModuleInferenceOptions options,
 			List<Module> referenceModules) throws IncorrectNumberOfEntriesException, IOException {
 		ConcurrentHashMap<String, Modules> moduleInference = new ConcurrentHashMap<>();
-
-		final Function<String, BasicFeature> rowMapper = getInputFormat().equals("1") ? new FunctionRowMapper()
-				: new TaxonFunctionRowMapper();
 
 		if (input.isDirectory()) {
 			File[] files = input.listFiles();
@@ -140,6 +141,9 @@ public class ModuleManagerImpl implements ModuleManager {
 			List<File> inputFiles = Arrays.asList(files);
 			// create a processing stream
 			Stream<File> stream = isConcurrent() ? inputFiles.parallelStream() : inputFiles.stream();
+			// create the row mapper
+			final Function<String, BasicFeature> rowMapper = getInputFormat().equals("1") ? new FunctionRowMapper()
+					: new TaxonFunctionRowMapper();
 
 			stream.forEach(file -> {
 				List<BasicFeature> orthologs;
@@ -157,19 +161,24 @@ public class ModuleManagerImpl implements ModuleManager {
 
 		} else {
 			// set MatrixLineProcessor according to input format
-			MatrixLineProcessor<BasicFeature> mlp = getInputFormat().equals("1") ? new FunctionLineProcessor() : new TaxonFunctionLineProcessor();
-			
-			
-			/*
-			 *  TODO use a filter to skip lines with KOs not in the reference database
-			 *  0) After splitting decide if KO is to be kept or not
-			 *  1) replace the split by a RegExpr that extracts the KO => split only if required
-			 *  
-			 */
-			
-			
+			MatrixLineProcessor<BasicFeature> mlp = null;
+
+			switch (getInputFormat()) {
+			case "1":
+				mlp = new FunctionLineProcessor();
+				break;
+			case "2":
+				mlp = new TaxonFunctionLineProcessor();
+				break;
+			case "h2":
+				mlp = new TaxonFunctionHumannLineProcessor();
+				break;
+			default:
+				throw new RuntimeException("Input format " + getInputFormat() + " is not compatible with this version.");
+			}		
 			// reads matrix
-			long start = System.currentTimeMillis();
+			long start = System.currentTimeMillis();		
+			
 			Map<String, List<BasicFeature>> sampleOrthologs = FileUtils.readMatrix(input, Constants.TAB, mlp);
 			
 			log.debug("Loaded samples in " + ((System.currentTimeMillis() - start)/1000));

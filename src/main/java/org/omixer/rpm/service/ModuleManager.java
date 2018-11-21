@@ -19,8 +19,7 @@ import org.omixer.utils.exceptions.IncorrectNumberOfEntriesException;
 public interface ModuleManager {
 
 	/**
-	 * 
-	 * Does module inference on a list of Orthologs
+	 *Does module inference on a list of Orthologs
 	 * 
 	 * The orthologs that were mapped in the module have a value greater than 0 
 	 * 
@@ -31,6 +30,17 @@ public interface ModuleManager {
 	 */
 	Modules inferModules(List<BasicFeature> orthologs, ModuleInferenceOptions options, List<Module> modules);
 
+	/**
+	 * Does module inference on an Orthologs abundance file, optionally annotated with taxonomic information
+	 * 
+	 * 
+	 * @param input
+	 * @param options
+	 * @param referenceModules
+	 * @return
+	 * @throws IncorrectNumberOfEntriesException
+	 * @throws IOException
+	 */
 	ConcurrentHashMap<String, Modules> inferModules(File input, ModuleInferenceOptions options,
 			List<Module> referenceModules) throws IncorrectNumberOfEntriesException, IOException;
 

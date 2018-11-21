@@ -77,7 +77,7 @@ public class InferenceApp extends AbstractInferenceApp {
 				.argName("FILE").build());
 
 		options.addOption(Option.builder("a").longOpt("annotation")
-				.desc("Input file annotation.\nUse 1 for orthologs only files or 2 for taxonomic annotation followed by orthologs.\nDefaults to 1")
+				.desc("Input file annotation.\nUse 1 for orthologs only files, 2 for taxonomic annotation followed by orthologs or h2 for Humann2 files.\nDefaults to 1")
 				.hasArg().argName("ANNOTATION").build());
 
 		options.addOption(Option.builder("e").longOpt("export-format")
@@ -119,6 +119,7 @@ public class InferenceApp extends AbstractInferenceApp {
 		Set<String> formatValues = new HashSet<>();
 		formatValues.add("1");
 		formatValues.add("2");
+		formatValues.add("h2");
 
 		HelpFormatter formatter = new HelpFormatter();
 		formatter.setWidth(800);
@@ -177,7 +178,8 @@ public class InferenceApp extends AbstractInferenceApp {
 					throw new IllegalArgumentException("Annotation (" + annotation
 							+ ") is not a valid annotation. Please choose one of the available annotations");
 				}
-				if (annotation.equals("2")) {
+				// TODO let the builder check if per taxon is possible
+				if (annotation.equals("2") || annotation.equals("h2")) {
 					isPerTaxon = true;
 				}
 			}
@@ -281,7 +283,7 @@ public class InferenceApp extends AbstractInferenceApp {
 				// --with-coverage
 				File outCounts = new File(outputDir, "modules.tsv");
 				File outCoverage = new File(outputDir, "modules-coverage.tsv");
-				MatrixWriter matrixWriter = (annotation.equals("2") && isPerTaxon) ? new ModuleTaxonomyMatrixWriter() : new ModuleMatrixWriter();
+				MatrixWriter matrixWriter = ((annotation.equals("2") || annotation.equals("h2")) && isPerTaxon) ? new ModuleTaxonomyMatrixWriter() : new ModuleMatrixWriter();
 				// exportModules in one go instead of iterating uselessly twice
 				matrixWriter.exportModules(moduleInference, outCounts, outCoverage);
 			}
