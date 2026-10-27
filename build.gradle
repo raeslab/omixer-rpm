@@ -6,6 +6,13 @@ plugins {
 group = "io.omixer"
 version = '1.2-dev'
 
+// Minimum Java version for users; compiles and runs the tests on this JDK
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
 repositories {
 	mavenCentral()
 	mavenLocal()
