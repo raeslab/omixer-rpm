@@ -3,7 +3,7 @@ package io.omixer.rpm.service;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 
 import io.omixer.rpm.model.BasicFeature;
 import io.omixer.rpm.model.Module;
@@ -37,11 +37,12 @@ public interface ModuleManager {
 	 * @param input
 	 * @param options
 	 * @param referenceModules
-	 * @return
+	 * @return the modules inferred for each sample, iterating in input order: matrix header order, or file name
+	 *         order for a directory
 	 * @throws IncorrectNumberOfEntriesException
 	 * @throws IOException
 	 */
-	ConcurrentHashMap<String, Modules> inferModules(File input, ModuleInferenceOptions options,
+	Map<String, Modules> inferModules(File input, ModuleInferenceOptions options,
 			List<Module> referenceModules) throws IncorrectNumberOfEntriesException, IOException;
 
 }

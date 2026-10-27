@@ -4,7 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -21,7 +21,7 @@ public class ModuleMatrixWriter extends MatrixWriter {
 	public void writeMatrix(Map<String, Modules> moduleInference, File outfile, Function<Module, Double> f)
 			throws IOException {
 
-		Set<String> observedModules = new HashSet<>();
+		Set<String> observedModules = new LinkedHashSet<>();
 		/**
 		 * As the module space is very small i.e max 120 modules. For a 1000
 		 * samples we have 120000 objects to store which is nothing. So add all

@@ -5,14 +5,16 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -124,9 +126,8 @@ public class ModuleManagerImpl implements ModuleManager {
 	/**
 	 * Current possible values for iput format are 1 (orthologs), 2(orthologs+taxa), h2(humann2 matrix)
 	 */
-	public ConcurrentHashMap<String, Modules> inferModules(File input, ModuleInferenceOptions options,
+	public Map<String, Modules> inferModules(File input, ModuleInferenceOptions options,
 			List<Module> referenceModules) throws IncorrectNumberOfEntriesException, IOException {
-		ConcurrentHashMap<String, Modules> moduleInference = new ConcurrentHashMap<>();
 
 		Map<String, List<BasicFeature>> sampleOrthologs;
 		long start = System.currentTimeMillis();
@@ -152,18 +153,14 @@ public class ModuleManagerImpl implements ModuleManager {
 				? sampleOrthologs.entrySet().parallelStream() : sampleOrthologs.entrySet().stream();
 				
 		start = System.currentTimeMillis();
-		// infer the modules
-		stream.forEach(entry -> {
-			// create a module list for each different process
-			List<Module> refMods = referenceModules.stream().map(Module::clone).collect(Collectors.toList());
-			// do module inference
-			
-			// TODO check if removal of orthologs here will save memory
-			
-			Modules modules = inferModules(entry.getValue(), options, refMods);
-			// put sample name => the current module inference, in the result
-			moduleInference.put(entry.getKey(), modules);
-		});
+		// infer the modules: sample name => the module inference. Collecting an ordered stream into a
+		// LinkedHashMap keeps the input sample order, also in parallel
+		// TODO check if removal of orthologs here will save memory
+		Map<String, Modules> moduleInference = stream.collect(Collectors.toMap(Entry::getKey,
+				// each sample gets its own copy of the reference modules
+				entry -> inferModules(entry.getValue(), options,
+						referenceModules.stream().map(Module::clone).collect(Collectors.toList())),
+				(first, second) -> first, LinkedHashMap::new));
 		log.debug("Inferred modules in " + ((System.currentTimeMillis() - start)/1000));
 		return moduleInference;
 	}
@@ -183,7 +180,9 @@ public class ModuleManagerImpl implements ModuleManager {
 		}
 		Function<InputLine, BasicFeature> rowMapper = getInputFormat().equals("1") ? new FunctionRowMapper()
 				: new TaxonFunctionRowMapper();
-		Map<String, List<BasicFeature>> sampleOrthologs = new HashMap<>();
+		// samples in file name order
+		Arrays.sort(files, Comparator.comparing(File::getName));
+		Map<String, List<BasicFeature>> sampleOrthologs = new LinkedHashMap<>();
 		for (File file : files) {
 			if (!file.isFile() || file.isHidden()) {
 				continue;

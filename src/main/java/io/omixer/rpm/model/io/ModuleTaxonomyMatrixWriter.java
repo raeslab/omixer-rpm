@@ -5,7 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -44,12 +44,8 @@ public class ModuleTaxonomyMatrixWriter extends MatrixWriter {
 				if (taxon == null) {
 					taxon = Constants.EMPTY_STRING;
 				}
-				Set<String> taxonModules = taxaModules.get(taxon);
-				if (taxonModules == null) {
-					taxonModules = new HashSet<>();
-					taxaModules.put(taxon, taxonModules);
-				}
-				taxonModules.add(module.getModuleId());
+
+				taxaModules.computeIfAbsent(taxon, k -> new LinkedHashSet<>()).add(module.getModuleId());
 				taxonMods.put(taxon + module.getModuleId() , module);
 			}
 		}
@@ -114,12 +110,7 @@ public class ModuleTaxonomyMatrixWriter extends MatrixWriter {
 				if (taxon == null) {
 					taxon = Constants.EMPTY_STRING;
 				}
-				Set<String> taxonModules = taxaModules.get(taxon);
-				if (taxonModules == null) {
-					taxonModules = new HashSet<>();
-					taxaModules.put(taxon, taxonModules);
-				}
-				taxonModules.add(module.getModuleId());
+				taxaModules.computeIfAbsent(taxon, k -> new LinkedHashSet<>()).add(module.getModuleId());
 				taxonMods.put(taxon + module.getModuleId() , module);
 			}
 		}

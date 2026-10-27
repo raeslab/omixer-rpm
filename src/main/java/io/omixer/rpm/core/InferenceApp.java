@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -46,6 +46,9 @@ public class InferenceApp extends AbstractInferenceApp {
 			+ "VERSION: 1.1\n" + "AUTHOR: Youssef Darzi <youssef.darzi@gmail.com>\n\n"
 			+ "ARGUMENTS (Options starting with -X are non-standard and subject to change without notice.)\n\n";
 
+	/** Accepted values of --score-estimator, used in the help text and in its error message */
+	private static final List<String> SCORE_ESTIMATORS = List.of("median", "average", "sum", "min");
+
 	public static final String FOOTER = "\nLicensed under an Academic Non-commercial Software License Agreement, https://github.com/raeslab/omixer-rpm/blob/master/LICENSE";
 
 	public static void main(String[] args) {
@@ -60,7 +63,7 @@ public class InferenceApp extends AbstractInferenceApp {
 				.hasArg().argName("COVERAGE").build());
 
 		options.addOption(Option.builder("s").longOpt("score-estimator")
-				.desc("The score estimatore.\nAccepted values are [median|average|sum|min].\nDefaults to median").hasArg()
+				.desc("The score estimator.\nAccepted values are [" + String.join("|", SCORE_ESTIMATORS) + "].\nDefaults to median").hasArg()
 				.argName("SCORE-ESTIMATOR").build());
 
 		options.addOption(Option.builder("n").longOpt("normalize-by-length")
@@ -159,7 +162,7 @@ public class InferenceApp extends AbstractInferenceApp {
 					algorithm = ModuleInferenceOptimizers.MIN.displayName();
 				} else if (!"median".equals(estimator)) {
 					throw new IllegalArgumentException(estimator
-							+ " is not a valid value for score calculation. Please chose between median or average");
+							+ " is not a valid score estimator. Please choose one of [" + String.join("|", SCORE_ESTIMATORS) + "]");
 				}
 			}
 
@@ -252,7 +255,7 @@ public class InferenceApp extends AbstractInferenceApp {
 		long start = System.currentTimeMillis();
 		try {
 			final List<Module> referenceModules = ModuleParser.parseModuleFile(moduleFile);
-			ConcurrentHashMap<String, Modules> moduleInference = moduleManager.inferModules(inputdir,
+			Map<String, Modules> moduleInference = moduleManager.inferModules(inputdir,
 					moduleInferenceOptions, referenceModules);
 			// Check if the automatic threshold detection is required
 			if (Double.compare(coverage, -1d) == 0) {

@@ -1,7 +1,6 @@
 package io.omixer.rpm.service
 
 
-import java.util.concurrent.ConcurrentHashMap;
 
 import io.omixer.rpm.model.BasicFeature;
 import io.omixer.rpm.model.Module;
@@ -270,7 +269,7 @@ public class ModuleManagerSpecs extends Specification {
 		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_REACTION_BASED.displayName())
 		options.setNormalizeByLength(true)
 		manager.setInputFormat("1")
-		ConcurrentHashMap<String, Modules> inference = manager.inferModules(new File("src/test/resources/matrix.tsv"), options, referenceModules)
+		Map<String, Modules> inference = manager.inferModules(new File("src/test/resources/matrix.tsv"), options, referenceModules)
 
 		then:
 		inference.size() == 2
@@ -303,7 +302,7 @@ public class ModuleManagerSpecs extends Specification {
 		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_REACTION_BASED.displayName())
 		options.setNormalizeByLength(false)
 		manager.setInputFormat("1")
-		ConcurrentHashMap<String, Modules> inference = manager.inferModules(new File("src/test/resources/matrix.tsv"), options, referenceModules)
+		Map<String, Modules> inference = manager.inferModules(new File("src/test/resources/matrix.tsv"), options, referenceModules)
 		def inferenceS2 = inference.get("S2").toAboveCutoffList().groupBy{ it.getModuleId() }
 
 		then: 	
@@ -334,7 +333,7 @@ public class ModuleManagerSpecs extends Specification {
 		options.setPerTaxon(true)
 				
 		when: "A matrix wih species annotation and a 2 samples"
-		ConcurrentHashMap<String, Modules> inference = manager.inferModules(new File("src/test/resources/taxon_matrix.tsv"), options, referenceModules)
+		Map<String, Modules> inference = manager.inferModules(new File("src/test/resources/taxon_matrix.tsv"), options, referenceModules)
 		
 		then: "There is an inference for each sample"
 		inference.size() == 2
@@ -368,7 +367,7 @@ public class ModuleManagerSpecs extends Specification {
 		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_REACTION_BASED.displayName())
 		options.setNormalizeByLength(true)
 				
-		ConcurrentHashMap<String, Modules> inference = manager.inferModules(new File("src/test/resources/input_directory/"), options, referenceModules)
+		Map<String, Modules> inference = manager.inferModules(new File("src/test/resources/input_directory/"), options, referenceModules)
 
 		then:"expect 2 samples to be returned"
 		inference.size() == 2

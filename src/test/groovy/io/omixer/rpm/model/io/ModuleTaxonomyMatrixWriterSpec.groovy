@@ -7,6 +7,25 @@ import spock.lang.Specification
 
 public class ModuleTaxonomyMatrixWriterSpec extends Specification {
 
+	def "writeCounts writes the samples as columns in the given order and each taxon's modules in reference order"() {
+
+		setup:
+		List<String> modules = ["MF0012", "MF0003", "MF0101", "MF0040", "MF0007"]
+		Map<String, Modules> moduleInference = new LinkedHashMap<>()
+		["S3", "S1", "Z9", "S10", "A2"].each { sample ->
+			moduleInference[sample] = new Modules(modules.collect { new Module(it, "Sp1", 1d, 1d, null) }, 0d)
+		}
+
+		when:
+		File out = File.createTempFile("ModuleTaxonomyMatrixWriterSpec", "out")
+		new ModuleTaxonomyMatrixWriter().writeCounts(moduleInference, out)
+		List<String> lines = out.readLines()
+
+		then:
+		lines[0] == "Taxon\tModule\tS3\tS1\tZ9\tS10\tA2"
+		lines.drop(1).collect { it.split("\t")[1] } == modules
+	}
+
 	def "writeCounts outputs a Matrix with a header containing taxon name, module id, followed by values"() {
 		setup: "create a modules set for 2 samples"
 		Map<String, Modules> moduleInference = [:]
