@@ -5,9 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -58,10 +56,10 @@ public class ModuleManagerImpl implements ModuleManager {
 	
 	// use 1 as default
 	private String inputFormat = "1";
-	boolean concurent;
+	boolean concurrent;
 
 	public boolean isConcurrent() {
-		return concurent;
+		return concurrent;
 	}
 
 	public String getInputFormat() {
@@ -69,7 +67,7 @@ public class ModuleManagerImpl implements ModuleManager {
 	}
 
 	public void setConcurrent(boolean concurrent) {
-		this.concurent = concurrent;
+		this.concurrent = concurrent;
 	}
 
 	public void setInputFormat(String inputFormat) {
@@ -81,14 +79,7 @@ public class ModuleManagerImpl implements ModuleManager {
 		Map<String, Double> orthologAbundanceMap = new HashMap<String, Double>();
 		// populate the orthologs and the abundance map
 		for (BasicFeature bf : orthologs) {
-
-			Double abundance = orthologAbundanceMap.get(bf.getFunction());
-			// first time ortholog observed?
-			if (abundance == null) {
-				orthologAbundanceMap.put(bf.getFunction(), bf.getCount());
-			} else {
-				orthologAbundanceMap.put(bf.getFunction(), bf.getCount() + abundance);
-			}
+            orthologAbundanceMap.merge(bf.getFunction(), bf.getCount(), Double::sum);
 		}
 		return orthologAbundanceMap;
 	}
@@ -143,22 +134,15 @@ public class ModuleManagerImpl implements ModuleManager {
 			sampleOrthologs = readSampleDirectory(input);
 		} else {
 			// set MatrixLineProcessor according to input format
-			MatrixLineProcessor<BasicFeature> mlp = null;
+			MatrixLineProcessor<BasicFeature> mlp = switch (getInputFormat()) {
+                case "1" -> new FunctionLineProcessor();
+                case "2" -> new TaxonFunctionLineProcessor();
+                case "h2" -> new TaxonFunctionHumannLineProcessor();
+                default ->
+                        throw new RuntimeException("Input format " + getInputFormat() + " is not compatible with this version.");
+            };
 
-			switch (getInputFormat()) {
-			case "1":
-				mlp = new FunctionLineProcessor();
-				break;
-			case "2":
-				mlp = new TaxonFunctionLineProcessor();
-				break;
-			case "h2":
-				mlp = new TaxonFunctionHumannLineProcessor();
-				break;
-			default:
-				throw new RuntimeException("Input format " + getInputFormat() + " is not compatible with this version.");
-			}		
-			// reads matrix
+            // reads matrix
 			sampleOrthologs = FileUtils.readMatrix(input, Constants.TAB, mlp);
 		}
 		log.debug("Loaded samples in " + ((System.currentTimeMillis() - start)/1000));
@@ -171,7 +155,7 @@ public class ModuleManagerImpl implements ModuleManager {
 		// infer the modules
 		stream.forEach(entry -> {
 			// create a module list for each different process
-			List<Module> refMods = referenceModules.stream().map(x -> x.clone()).collect(Collectors.toList());
+			List<Module> refMods = referenceModules.stream().map(Module::clone).collect(Collectors.toList());
 			// do module inference
 			
 			// TODO check if removal of orthologs here will save memory
@@ -233,30 +217,30 @@ public class ModuleManagerImpl implements ModuleManager {
 		Map<String, Double> orthologAbundanceMap = makeOrthologAbundanceMap(orthologs);
 		// list of predicted modules
 		List<Module> predictedModules = new ArrayList<Module>();
-		for (Iterator<Module> iterator = modules.iterator(); iterator.hasNext();) {
-			/*
-			 * Clone to avoid keeping only best paths after first inference.
-			 * This is important as the methods below will change the module
-			 * state
-			 */
-			Module module = iterator.next().clone();
-			predictedModules.add(module);
-			List<List<List<Ortholog>>> moduleOrthologs = module.getOrthologs();
-			// give counts to orthologs in order to quantify
-			for (List<List<Ortholog>> path : moduleOrthologs) {
-				for (List<Ortholog> step : path) {
-					for (Ortholog ortholog : step) {
-						Double count = orthologAbundanceMap.get(ortholog.getOrthologId());
-						if (count != null) {
-							ortholog.setCount(count);
-						} else {
-							ortholog.setCount(0);
-						}
-					}
-				}
-			}
-			optimizeModule(module, options);
-		}
+        for (Module value : modules) {
+            /*
+             * Clone to avoid keeping only best paths after first inference.
+             * This is important as the methods below will change the module
+             * state
+             */
+            Module module = value.clone();
+            predictedModules.add(module);
+            List<List<List<Ortholog>>> moduleOrthologs = module.getOrthologs();
+            // give counts to orthologs in order to quantify
+            for (List<List<Ortholog>> path : moduleOrthologs) {
+                for (List<Ortholog> step : path) {
+                    for (Ortholog ortholog : step) {
+                        Double count = orthologAbundanceMap.get(ortholog.getOrthologId());
+                        if (count != null) {
+                            ortholog.setCount(count);
+                        } else {
+                            ortholog.setCount(0);
+                        }
+                    }
+                }
+            }
+            optimizeModule(module, options);
+        }
 		return new Modules(predictedModules, options.getCoverage());
 	}
 
@@ -304,12 +288,12 @@ public class ModuleManagerImpl implements ModuleManager {
 			// if Ortholog is observed in more than one Module
 			if (observedModulesCount > 1) {
 				// Proportion the value
-				double proportionnedValue = orthologAbundanceMap.get(entry.getKey()) / observedModulesCount;
+				double proportionedValue = orthologAbundanceMap.get(entry.getKey()) / observedModulesCount;
 				for (Module m : entry.getValue()) {
 					// update every occurrence of the Ortholog in this module, not only one of them (B02)
 					for (Ortholog ortholog : m.getFlatOrthologs()) {
 						if (ortholog.getOrthologId().equals(entry.getKey())) {
-							ortholog.setCount(proportionnedValue);
+							ortholog.setCount(proportionedValue);
 						}
 					}
 				}
