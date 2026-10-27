@@ -1,6 +1,8 @@
 package io.omixer.rpm.service.impl;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,6 +21,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import io.omixer.rpm.exceptions.InputFormatException;
 import io.omixer.rpm.model.BasicFeature;
 import io.omixer.rpm.model.Module;
 import io.omixer.rpm.model.ModuleInferenceOptions;
@@ -34,6 +37,7 @@ import io.omixer.rpm.model.optimizers.ModuleAbundanceCoverageReactionMaximizer;
 import io.omixer.rpm.model.optimizers.ModuleScoreCalculator;
 import io.omixer.rpm.parsers.FunctionLineProcessor;
 import io.omixer.rpm.parsers.FunctionRowMapper;
+import io.omixer.rpm.parsers.InputLine;
 import io.omixer.rpm.parsers.TaxonFunctionHumannLineProcessor;
 import io.omixer.rpm.parsers.TaxonFunctionLineProcessor;
 import io.omixer.rpm.parsers.TaxonFunctionRowMapper;
@@ -133,34 +137,10 @@ public class ModuleManagerImpl implements ModuleManager {
 			List<Module> referenceModules) throws IncorrectNumberOfEntriesException, IOException {
 		ConcurrentHashMap<String, Modules> moduleInference = new ConcurrentHashMap<>();
 
+		Map<String, List<BasicFeature>> sampleOrthologs;
+		long start = System.currentTimeMillis();
 		if (input.isDirectory()) {
-			File[] files = input.listFiles();
-			if (files == null) {
-				throw new RuntimeException("Input directory " + input
-						+ " is empty or does not exist. Please make sure the input directory path is correct!");
-			}
-			// do module inference for all samples
-			List<File> inputFiles = Arrays.asList(files);
-			// create a processing stream
-			Stream<File> stream = isConcurrent() ? inputFiles.parallelStream() : inputFiles.stream();
-			// create the row mapper
-			final Function<String, BasicFeature> rowMapper = getInputFormat().equals("1") ? new FunctionRowMapper()
-					: new TaxonFunctionRowMapper();
-
-			stream.forEach(file -> {
-				List<BasicFeature> orthologs;
-				try {
-					orthologs = FileUtils.readCSV(file, 0, rowMapper);
-					List<Module> refMods = referenceModules.stream().map(x -> x.clone()).collect(Collectors.toList());
-					Modules modules = inferModules(orthologs, options, refMods);
-					// FIXME careful not to remove more than necessary
-					moduleInference.put(file.getName().split("\\.")[0], modules);
-				} catch (IOException e) {
-					throw new RuntimeException(
-							"Exception while reading " + file.getAbsolutePath() + " " + e.getMessage());
-				}
-			});
-
+			sampleOrthologs = readSampleDirectory(input);
 		} else {
 			// set MatrixLineProcessor according to input format
 			MatrixLineProcessor<BasicFeature> mlp = null;
@@ -179,32 +159,71 @@ public class ModuleManagerImpl implements ModuleManager {
 				throw new RuntimeException("Input format " + getInputFormat() + " is not compatible with this version.");
 			}		
 			// reads matrix
-			long start = System.currentTimeMillis();		
-			
-			Map<String, List<BasicFeature>> sampleOrthologs = FileUtils.readMatrix(input, Constants.TAB, mlp);
-			
-			log.debug("Loaded samples in " + ((System.currentTimeMillis() - start)/1000));
-			
-			// create a stream to process the data per samples
-			Stream<Entry<String, List<BasicFeature>>> stream = isConcurrent()
-					? sampleOrthologs.entrySet().parallelStream() : sampleOrthologs.entrySet().stream();
-					
-			start = System.currentTimeMillis();
-			// infer the modules
-			stream.forEach(entry -> {
-				// create a module list for each different process
-				List<Module> refMods = referenceModules.stream().map(x -> x.clone()).collect(Collectors.toList());
-				// do module inference
-				
-				// TODO check if removal of orthologs here will save memory
-				
-				Modules modules = inferModules(entry.getValue(), options, refMods);
-				// put sample name => the current module inference, in the result
-				moduleInference.put(entry.getKey(), modules);
-			});
-			log.debug("Inferred modules in " + ((System.currentTimeMillis() - start)/1000));
+			sampleOrthologs = FileUtils.readMatrix(input, Constants.TAB, mlp);
 		}
+		log.debug("Loaded samples in " + ((System.currentTimeMillis() - start)/1000));
+			
+		// create a stream to process the data per samples
+		Stream<Entry<String, List<BasicFeature>>> stream = isConcurrent()
+				? sampleOrthologs.entrySet().parallelStream() : sampleOrthologs.entrySet().stream();
+				
+		start = System.currentTimeMillis();
+		// infer the modules
+		stream.forEach(entry -> {
+			// create a module list for each different process
+			List<Module> refMods = referenceModules.stream().map(x -> x.clone()).collect(Collectors.toList());
+			// do module inference
+			
+			// TODO check if removal of orthologs here will save memory
+			
+			Modules modules = inferModules(entry.getValue(), options, refMods);
+			// put sample name => the current module inference, in the result
+			moduleInference.put(entry.getKey(), modules);
+		});
+		log.debug("Inferred modules in " + ((System.currentTimeMillis() - start)/1000));
 		return moduleInference;
+	}
+
+	/**
+	 * Reads a directory with one headerless file per sample. Sub-directories and hidden files (e.g. .DS_Store)
+	 * are skipped; any other file must be a sample.
+	 * 
+	 * @throws InputFormatException if a line of a sample file does not follow the input format
+	 * @throws IOException if the directory or a sample file cannot be read
+	 */
+	private Map<String, List<BasicFeature>> readSampleDirectory(File input) throws IOException {
+		File[] files = input.listFiles();
+		if (files == null) {
+			// input is a directory, so a null listing means it could not be read
+			throw new IOException("Cannot list the files of input directory " + input);
+		}
+		Function<InputLine, BasicFeature> rowMapper = getInputFormat().equals("1") ? new FunctionRowMapper()
+				: new TaxonFunctionRowMapper();
+		Map<String, List<BasicFeature>> sampleOrthologs = new HashMap<>();
+		for (File file : files) {
+			if (!file.isFile() || file.isHidden()) {
+				continue;
+			}
+			// FIXME careful not to remove more than necessary
+			sampleOrthologs.put(file.getName().split("\\.")[0], readSampleFile(file, rowMapper));
+		}
+		return sampleOrthologs;
+	}
+
+	/**
+	 * Maps every line of a headerless sample file, passing the file name and line number along for error messages
+	 */
+	private List<BasicFeature> readSampleFile(File file, Function<InputLine, BasicFeature> rowMapper)
+			throws IOException {
+		List<BasicFeature> features = new ArrayList<>();
+		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+			String text;
+			int lineNumber = 0;
+			while ((text = reader.readLine()) != null) {
+				features.add(rowMapper.apply(new InputLine(file.getName(), ++lineNumber, text)));
+			}
+		}
+		return features;
 	}
 	
 	protected Modules inferModulesCore(List<BasicFeature> orthologs, ModuleInferenceOptions options,

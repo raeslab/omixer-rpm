@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
+import io.omixer.rpm.exceptions.ModuleFileFormatException;
 import io.omixer.rpm.model.Module;
 import io.omixer.rpm.model.Ortholog;
 import io.omixer.utils.Constants;
@@ -16,66 +17,85 @@ public class ModuleParser {
 	/**
 	 * Reads a module definition file to create a list of {@link Module}s
 	 * 
-	 * No comments allowed. Modules have to end by ///
-	 * 
+	 * No comments allowed. Modules have to end by ///. Blank lines are ignored.
+	 * Each module starts with a header line (ID TAB name) and has at least one step.
+	 *
 	 * @param file
 	 * @return
+	 * @throws ModuleFileFormatException if the file does not follow this format
 	 * @throws IOException
 	 */
 	public static final List<Module> parseModuleFile(File file) throws IOException {
 		final String MODULE_END = "///";
 		final String alternativeSeparator = Constants.TAB;
-		boolean newModule = false;
+		// a module header is expected at the start of the file and after each ///
+		boolean newModule = true;
 		// list of read modules
 		final List<Module> modules = new LinkedList<Module>();
 		// wrap the parsing in a try catch to be sure the fileReader is closed
 		try (BufferedReader fileReader = new BufferedReader(new FileReader(file))) {
 			// initialize the reader
-			
+
 			String line = null;
 			// the module at this point of iteration
 			Module currentModule = null;
 			// tokens holder for module name line
-			String tokens[] = null;
-			// read the first module
-			if (fileReader.ready()) {
-				line = fileReader.readLine().trim();
-				// add the current module to the list of modules
-				modules.add(new Module());
-				// create a new module
-				currentModule = modules.get(modules.size() - 1);
-				// the current line is its id
-				tokens = line.split(Constants.TAB);
-				currentModule.setModuleId(tokens[0]);
-				currentModule.setName(tokens[1]);
-			}
+			String[] tokens = null;
+			// 1-based line number, for error messages
+			int lineNumber = 0;
 
 			// parse the file
-			while (fileReader.ready()) {
+			while ((line = fileReader.readLine()) != null) {
 
-				line = fileReader.readLine().trim();
+				lineNumber++;
+				line = line.trim();
+				// blank lines are neither module headers nor steps
+				if (line.isEmpty()) {
+					continue;
+				}
 				if (newModule) {
+					if (line.equals(MODULE_END)) {
+						throw new ModuleFileFormatException(file.getName() + ", line " + lineNumber
+								+ ": expected a module header (ID<TAB>name), found " + MODULE_END);
+					}
+					// the current line is its id
+					tokens = line.split(Constants.TAB);
+					if (tokens.length < 2) {
+						throw new ModuleFileFormatException(file.getName() + ", line " + lineNumber + ": module header '"
+								+ line + "' has no name, expected ID<TAB>name");
+					}
 					// add the current module to the list of modules
 					modules.add(new Module());
 					// create a new module
 					currentModule = modules.get(modules.size() - 1);
-					// the current line is its id
-					tokens = line.split(Constants.TAB);
 					currentModule.setModuleId(tokens[0]);
 					currentModule.setName(tokens[1]);
 					newModule = false;
 				} else if (line.equals(MODULE_END)) {
+					checkHasSteps(currentModule, file, lineNumber);
 					newModule = true;
 				} else {
-					if (currentModule != null) {
-						// add the current line as a KO step
-						currentModule.addOrthologs(makeModuleStep(line, alternativeSeparator, Constants.COMMA));
-					}
+					// add the current line as a KO step
+					currentModule.addOrthologs(makeModuleStep(line, alternativeSeparator, Constants.COMMA));
 				}
+			}
+			// the last module may end without ///
+			if (!newModule) {
+				checkHasSteps(currentModule, file, lineNumber);
 			}
 		}
 		// return the list of modules
 		return modules;
+	}
+
+	/**
+	 * A module without steps cannot be scored, so it is rejected when its end is reached
+	 */
+	private static void checkHasSteps(Module module, File file, int lineNumber) {
+		if (module.getOrthologs().isEmpty()) {
+			throw new ModuleFileFormatException(file.getName() + ", line " + lineNumber + ": module '"
+					+ module.getModuleId() + "' has no steps");
+		}
 	}
 
 	/**

@@ -17,6 +17,7 @@ import org.apache.commons.cli.MissingArgumentException;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import io.omixer.rpm.exceptions.OmixerRpmException;
 import io.omixer.rpm.model.Module;
 import io.omixer.rpm.model.ModuleCoverageDistribution;
 import io.omixer.rpm.model.ModuleInferenceOptions;
@@ -287,7 +288,7 @@ public class InferenceApp extends AbstractInferenceApp {
 				// exportModules in one go instead of iterating uselessly twice
 				matrixWriter.exportModules(moduleInference, outCounts, outCoverage);
 			}
-		} catch (IOException | IncorrectNumberOfEntriesException e) {
+		} catch (IOException | IncorrectNumberOfEntriesException | OmixerRpmException e) {
 			app.log.error("Exception while reading input data: " + e.getMessage());
 			return;
 		} catch (ArrayIndexOutOfBoundsException e) {
