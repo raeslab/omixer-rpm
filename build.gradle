@@ -1,41 +1,38 @@
-buildscript {
-	repositories { jcenter() }
-	dependencies { classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4' }
-}
-
 plugins {
-	id 'com.github.johnrengelman.shadow' version '2.0.4'
+	id 'com.gradleup.shadow' version '9.6.1'
 	id 'groovy'
 }
 
-group = "org.omixer"
+group = "io.omixer"
 version = '1.2-dev'
 
 repositories {
-	jcenter()
+	mavenCentral()
 	mavenLocal()
 }
 
 dependencies {
-	compile 'commons-cli:commons-cli:1.4'	
-	compile 'commons-logging:commons-logging:1.2'
-	compile 'log4j:log4j:1.2.17'
-	
-	compile 'org.apache.commons:commons-math3:3.6.1'
-	compile 'org.apache.commons:commons-lang3:3.7'
-	compile 'org.codehaus.groovy:groovy:2.5.0'
-	
-	implementation 'org.omixer:omixer-utils:1.0'
+	implementation 'commons-cli:commons-cli:1.4'
+	implementation 'commons-logging:commons-logging:1.2'
+	implementation 'log4j:log4j:1.2.17'
+
+	implementation 'org.apache.commons:commons-math3:3.6.1'
+	implementation 'org.apache.commons:commons-lang3:3.7'
+	implementation 'org.codehaus.groovy:groovy:2.5.0'
+
+	implementation 'io.omixer:omixer-utils:1.0.1'
 	testImplementation 'org.spockframework:spock-core:1.1-groovy-2.4'
 }
 
 configurations {
 	/* We don't want the groovy-all dependency in our shadowJar */
-	runtime.exclude module: 'groovy'
+	runtimeClasspath {
+		exclude module: 'groovy'
+	}
 }
 
 jar {
 	manifest {
-		attributes 'Main-Class': 'org.omixer.rpm.core.InferenceApp'
+		attributes 'Main-Class': 'io.omixer.rpm.core.InferenceApp'
 	}
 }
