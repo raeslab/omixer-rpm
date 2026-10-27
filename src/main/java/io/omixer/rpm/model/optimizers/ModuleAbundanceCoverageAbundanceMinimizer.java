@@ -29,28 +29,15 @@ public class ModuleAbundanceCoverageAbundanceMinimizer extends ModuleAbundanceCo
 	protected PathwaySummary computePathScoreAndCoverage(List<List<Ortholog>> path) {
 
 		double pathLength = path.size();
-		double presentOrthologs = 0;
-		// use the minimum
-		double pathCount = 0;
-
-		for (List<Ortholog> step : path) {
-			boolean hasStep = false;
-			for (Ortholog ortholog : step) {
-				if (ortholog.getCount() > 0) { 
-					// if first observation or smaller than current min then set to current ortholog value
-					if (presentOrthologs == 0 || ortholog.getCount() <  pathCount) {
-						pathCount = ortholog.getCount();
-					}
-					hasStep = true;
-				}
-			}
-			if (hasStep) {
-				presentOrthologs++;
-			}
-		}
-
-		double pathScore = pathCount;
-		double coverage = presentOrthologs / pathLength;
+		// abundance and coverage are computed independently: a shared counter used to make the minimum skip
+		// the first observed step's subunits but the last one
+		// the minimum: the smallest abundance of a present ortholog, 0 when none is present
+		double pathScore = path.stream().flatMap(List::stream).mapToDouble(Ortholog::getCount)
+				.filter(count -> count > 0).min().orElse(0);
+		// the coverage: the fraction of steps with at least one present ortholog
+		double presentSteps = path.stream().filter(step -> step.stream().anyMatch(ortholog -> ortholog.getCount() > 0))
+				.count();
+		double coverage = presentSteps / pathLength;
 		return new PathwaySummary(path, coverage, pathScore);
 	}
 }
