@@ -135,7 +135,7 @@ class XDistributeSpec extends Specification {
 		def inference = manager.inferModules(new File("src/test/resources/taxon_matrix.tsv"), options, gmms)
 		Modules all = new Modules()
 		inference.values().each { all.addModules(it) }
-		Double cutoff = new ModuleCoverageDistribution(all).findOptimalCoverage()
+		Double cutoff = new ModuleCoverageDistribution(all).findOptimalCoverage().orElseThrow()
 
 		then: """every taxon is present in every sample. Before the fix, each sample held only the last taxon,
 				whose modules all had coverage 0, so the automatic cutoff got an empty distribution and threw

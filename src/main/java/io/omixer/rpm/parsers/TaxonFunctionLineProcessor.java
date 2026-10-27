@@ -17,6 +17,11 @@ public class TaxonFunctionLineProcessor extends FunctionLineProcessor {
 	@Override
 	protected BasicFeature makeBasicFeature(String[] tokens, Double count) {
 		return new BasicFeature(tokens[0], tokens[1], count);
-	}	
+	}
+
+	@Override
+	protected String expectedFormat() {
+		return "taxon<TAB>KO<TAB>one abundance per sample";
+	}
 }
 

@@ -5,6 +5,7 @@ import java.nio.file.Path
 
 import io.omixer.rpm.model.ModuleInferenceOptions
 import io.omixer.rpm.model.enums.ModuleInferenceOptimizers
+import io.omixer.rpm.exceptions.DuplicateSampleNameException
 import io.omixer.rpm.exceptions.InputFormatException
 import io.omixer.rpm.parsers.ModuleParser
 import io.omixer.rpm.service.impl.ModuleManagerImpl
@@ -75,5 +76,32 @@ class DirectoryInputSpec extends Specification {
 		then: "not skipped silently: a misformatted sample must not disappear from the results"
 		InputFormatException e = thrown()
 		e.message.contains("notes.txt, line 1")
+	}
+
+	def "a sample is named after its file without the last extension only"() {
+
+		setup:
+		["run.v2.tsv", "run.v3.tsv"].each { Files.copy(dir.resolve("S1"), dir.resolve(it)) }
+
+		when:
+		def inference = manager.inferModules(dir.toFile(), options, referenceModules)
+
+		then: "before, everything after the first dot was dropped and both files became sample 'run'"
+		inference.keySet() == ["S1", "S2", "run.v2", "run.v3"] as Set
+	}
+
+	def "two files that give the same sample name stop the run with an error naming both"() {
+
+		setup:
+		["S3.a", "S3.b"].each { Files.copy(dir.resolve("S1"), dir.resolve(it)) }
+
+		when:
+		manager.inferModules(dir.toFile(), options, referenceModules)
+
+		then: "before, one of the two files was silently lost"
+		DuplicateSampleNameException e = thrown()
+		e.message.contains("S3.a")
+		e.message.contains("S3.b")
+		e.message.contains("'S3'")
 	}
 }

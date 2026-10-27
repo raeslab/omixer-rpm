@@ -59,7 +59,8 @@ public abstract class ModuleAbundanceMaximizer extends ModuleAbundanceCoverageOp
 		
 		double normalizer = getNormalizer(pathLength, presentSteps);
 		
-		double pathScore = pathCount / normalizer;
+		// no observed step with an observed-steps normalizer: abundance 0 instead of 0 / 0 = NaN
+		double pathScore = normalizer == 0 ? 0 : pathCount / normalizer;
 		double coverage = presentSteps / pathLength;
 		return new PathwaySummary(path, coverage, pathScore);
 	}

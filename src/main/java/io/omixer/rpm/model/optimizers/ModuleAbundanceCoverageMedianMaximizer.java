@@ -67,7 +67,8 @@ public class ModuleAbundanceCoverageMedianMaximizer extends ModuleAbundanceCover
 			observedArray[i] = observedValues.get(i);
 		}
 
-		double pathScore = new Median().evaluate(observedArray);
+		// no observed step: abundance 0 (the median of no value is NaN)
+		double pathScore = observedArray.length == 0 ? Constants.ZERO : new Median().evaluate(observedArray);
 
 		// If median estimator is zero then replace it by minimum
 		if (Double.compare(pathScore, Constants.ZERO) == 0) {

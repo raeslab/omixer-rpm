@@ -2,6 +2,7 @@ package io.omixer.rpm.parsers
 
 import io.omixer.rpm.exceptions.InputFormatException
 import io.omixer.rpm.model.BasicFeature
+import io.omixer.utils.readers.FileLine
 
 import spock.lang.Specification
 
@@ -13,7 +14,7 @@ class RowMapperSpec extends Specification {
 	def "FunctionRowMapper maps KO TAB abundance"() {
 
 		when:
-		BasicFeature feature = new FunctionRowMapper().apply(new InputLine("S1", 1, "K00001\t2.5"))
+		BasicFeature feature = new FunctionRowMapper().apply(new FileLine("S1", 1, "K00001\t2.5"))
 
 		then:
 		feature.getFunction() == "K00001"
@@ -24,7 +25,7 @@ class RowMapperSpec extends Specification {
 	def "TaxonFunctionRowMapper maps taxon TAB KO TAB abundance"() {
 
 		when:
-		BasicFeature feature = new TaxonFunctionRowMapper().apply(new InputLine("S1", 1, "Sp1\tK00001\t2.5"))
+		BasicFeature feature = new TaxonFunctionRowMapper().apply(new FileLine("S1", 1, "Sp1\tK00001\t2.5"))
 
 		then:
 		feature.getTaxon() == "Sp1"
@@ -35,7 +36,7 @@ class RowMapperSpec extends Specification {
 	def "FunctionRowMapper rejects a malformed line, reporting the file, line number and expected format"() {
 
 		when:
-		new FunctionRowMapper().apply(new InputLine("S1.tsv", 7, line))
+		new FunctionRowMapper().apply(new FileLine("S1.tsv", 7, line))
 
 		then:
 		InputFormatException e = thrown()
@@ -48,7 +49,7 @@ class RowMapperSpec extends Specification {
 	def "TaxonFunctionRowMapper rejects a malformed line, reporting the file, line number and expected format"() {
 
 		when:
-		new TaxonFunctionRowMapper().apply(new InputLine("S1.tsv", 7, line))
+		new TaxonFunctionRowMapper().apply(new FileLine("S1.tsv", 7, line))
 
 		then:
 		InputFormatException e = thrown()
@@ -62,11 +63,11 @@ class RowMapperSpec extends Specification {
 
 		setup:
 		def mapper = new FunctionRowMapper()
-		mapper.apply(new InputLine("S1.tsv", 1, "K00001\t1"))
-		mapper.apply(new InputLine("S1.tsv", 2, "K00002\t2"))
+		mapper.apply(new FileLine("S1.tsv", 1, "K00001\t1"))
+		mapper.apply(new FileLine("S1.tsv", 2, "K00002\t2"))
 
 		when: "the second file's first line is malformed"
-		mapper.apply(new InputLine("S2.tsv", 1, "oops"))
+		mapper.apply(new FileLine("S2.tsv", 1, "oops"))
 
 		then: "the error reports S2.tsv, line 1, not a line count carried over from S1.tsv"
 		InputFormatException e = thrown()

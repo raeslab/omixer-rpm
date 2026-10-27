@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Map;
 
@@ -29,6 +30,7 @@ import io.omixer.rpm.model.io.ModuleMatrixWriter;
 import io.omixer.rpm.model.io.ModuleTaxonomyMatrixWriter;
 import io.omixer.rpm.parsers.ModuleParser;
 import io.omixer.rpm.service.impl.ModuleManagerImpl;
+import io.omixer.utils.exceptions.DuplicateColumnException;
 import io.omixer.utils.exceptions.IncorrectNumberOfEntriesException;
 
 /**
@@ -144,11 +146,16 @@ public class InferenceApp extends AbstractInferenceApp {
 
 			if (line.hasOption("coverage")) {
 				String coverageValue = line.getOptionValue("coverage");
+				String invalidCoverage = coverageValue
+						+ " is not a valid coverage value. Please provide a decimal value between 0 and 1, or -1 to enable automatic guessing of the coverage threshold.";
 				try {
 					coverage = Double.valueOf(coverageValue);
 				} catch (NumberFormatException e) {
-					throw new IllegalArgumentException(coverageValue
-							+ " is not a valid coverage value. Please provide a decimal value between 0 and 1, or -1 to enable automatic guessing of the coverage threshold.");
+					throw new IllegalArgumentException(invalidCoverage);
+				}
+				// -1 means automatic; anything else must be a fraction (the negated check also rejects NaN)
+				if (Double.compare(coverage, -1d) != 0 && !(coverage >= 0d && coverage <= 1d)) {
+					throw new IllegalArgumentException(invalidCoverage);
 				}
 			}
 			if (line.hasOption("score-estimator")) {
@@ -253,6 +260,8 @@ public class InferenceApp extends AbstractInferenceApp {
 		moduleInferenceOptions.setPerTaxon(isPerTaxon);
 		moduleInferenceOptions.setDistributeOrhologAbundance(isDistributeOrhologAbundance);
 		long start = System.currentTimeMillis();
+		// false when no module is observed in any sample, so that no automatic cutoff exists
+		boolean modulesObserved = true;
 		try {
 			final List<Module> referenceModules = ModuleParser.parseModuleFile(moduleFile);
 			Map<String, Modules> moduleInference = moduleManager.inferModules(inputdir,
@@ -267,13 +276,22 @@ public class InferenceApp extends AbstractInferenceApp {
 				}
 				// put in t Modules
 				ModuleCoverageDistribution mcd = new ModuleCoverageDistribution(allModules);
-				Double optimalCoverage = mcd.findOptimalCoverage();
-				coverage = optimalCoverage;
-				for (Modules modules : moduleInference.values()) {
-					modules.setCoverageCutoff(optimalCoverage);
+				Optional<Double> optimalCoverage = mcd.findOptimalCoverage();
+				if (optimalCoverage.isPresent()) {
+					coverage = optimalCoverage.get();
+					for (Modules modules : moduleInference.values()) {
+						modules.setCoverageCutoff(coverage);
+					}
+					// Export as svg
+					Files.write(new File(outputDir, "coverage-plot.svg").toPath(), mcd.toSVG().getBytes());
+				} else {
+					modulesObserved = false;
+					app.log.warn("No module was observed in any sample: no coverage cutoff can be learned and no module is reported");
+					// every module has coverage 0, so the smallest positive cutoff reports none
+					for (Modules modules : moduleInference.values()) {
+						modules.setCoverageCutoff(Double.MIN_VALUE);
+					}
 				}
-				// Export as svg 
-				Files.write(new File(outputDir, "coverage-plot.svg").toPath(), mcd.toSVG().getBytes());
 			}
 			// export sample as simple files
 			if (outFormat.equals("1")) {
@@ -291,16 +309,13 @@ public class InferenceApp extends AbstractInferenceApp {
 				// exportModules in one go instead of iterating uselessly twice
 				matrixWriter.exportModules(moduleInference, outCounts, outCoverage);
 			}
-		} catch (IOException | IncorrectNumberOfEntriesException | OmixerRpmException e) {
+		} catch (IOException | IncorrectNumberOfEntriesException | OmixerRpmException | DuplicateColumnException e) {
 			app.log.error("Exception while reading input data: " + e.getMessage());
-			return;
-		} catch (ArrayIndexOutOfBoundsException e) {
-			app.log.error("Exception while reading input. Please make sure you are using the correct annotation value (cf. --annotation description) for your input.");
 			return;
 		}
 		long time = System.currentTimeMillis() - start;
 		app.log.info("Total run time: " + (time / 1000l));
-		app.log.info("Coverage cutoff: " + coverage);
+		app.log.info("Coverage cutoff: " + (modulesObserved ? coverage : "none (no module observed)"));
 		app.log.info("Output files are in " + outputDir.getAbsolutePath());
 	}
 }

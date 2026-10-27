@@ -4,6 +4,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.apache.commons.lang3.math.NumberUtils;
 
 /**
  * A basic feature with name, taxon, score, and one other function so far
@@ -113,7 +114,17 @@ public class BasicFeature {
 		}
 		return false;
 	}
-	
+
+	/**
+	 * Function ids (e.g. KEGG orthologs) are never plain numbers: a numeric one usually means that an abundance
+	 * column was read as the function column, i.e. the wrong input annotation format
+	 *
+	 * @return true if the function id can be read as a number
+	 */
+	public boolean isFunctionNumeric() {
+		return NumberUtils.isCreatable(getFunction());
+	}
+
 	@Override
 	public String toString() {
 		ToStringBuilder tsb = new ToStringBuilder(this,

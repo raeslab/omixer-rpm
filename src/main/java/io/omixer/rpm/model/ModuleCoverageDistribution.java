@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -54,10 +55,19 @@ public class ModuleCoverageDistribution {
 			sortedCoverageIncidence[i] = coverageIncidence.get(sortedCoverageValues.get(i));
 		}
 
-		accumulator = MathUtils.accumulate(sortedCoverageIncidence);
+		// no observed module (e.g. an all-zero input): nothing to accumulate
+		accumulator = sortedCoverageIncidence.length == 0 ? new double[0]
+				: MathUtils.accumulate(sortedCoverageIncidence);
 	}
 
-	public Double findOptimalCoverage() {
+	/**
+	 * @return the coverage cutoff at the highest drop in recruited modules, or empty when no module was observed
+	 *         (every coverage is 0), in which case there is no cutoff to learn
+	 */
+	public Optional<Double> findOptimalCoverage() {
+		if (sortedCoverageValues.isEmpty()) {
+			return Optional.empty();
+		}
 		if (optimalCoverage == null) {
 
 			optimalCoverage = sortedCoverageValues.get(0);
@@ -75,7 +85,7 @@ public class ModuleCoverageDistribution {
 				}
 			}
 		}
-		return optimalCoverage;
+		return Optional.of(optimalCoverage);
 	}
 
 	public String toJSON() {
@@ -87,16 +97,19 @@ public class ModuleCoverageDistribution {
 		return coverageJSON;
 	}
 
+	/**
+	 * @throws IllegalStateException when no module was observed: there is no distribution to plot
+	 */
 	public String toSVG() {
 
+		Double optimalCoverage = findOptimalCoverage()
+				.orElseThrow(() -> new IllegalStateException("No module observed: no coverage distribution to plot"));
 		// scale the values to the device length
 		int width = 820;
 		int height = 620;
 		double xmax = sortedCoverageValues.get(0);
 		double ymax = accumulator[accumulator.length - 1];
 		int circleRadius = 4;
-
-		Double optimalCoverage = findOptimalCoverage();
 
 		SVGDevice svgDevice = new SVGDevice(width, height);
 		int drawingAreaWidth = svgDevice.getDrawingAreaWidth();

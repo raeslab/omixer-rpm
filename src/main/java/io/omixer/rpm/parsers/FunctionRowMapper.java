@@ -5,13 +5,14 @@ import java.util.function.Function;
 import io.omixer.rpm.exceptions.InputFormatException;
 import io.omixer.rpm.model.BasicFeature;
 import io.omixer.utils.Constants;
+import io.omixer.utils.readers.FileLine;
 
 /**
  * Maps a line of a headerless sample file: KO TAB abundance
  *
  * Stateless, so a single instance can be shared
  */
-public class FunctionRowMapper implements Function<InputLine, BasicFeature> {
+public class FunctionRowMapper implements Function<FileLine, BasicFeature> {
 
 	private static final String EXPECTED = "KO<TAB>abundance";
 
@@ -19,7 +20,7 @@ public class FunctionRowMapper implements Function<InputLine, BasicFeature> {
 	 * @throws InputFormatException if the line is not KO TAB abundance
 	 */
 	@Override
-	public BasicFeature apply(InputLine line) {
+	public BasicFeature apply(FileLine line) {
 		String[] tokens = line.text().split(Constants.TAB);
 		if (tokens.length < 2) {
 			throw new InputFormatException(line, EXPECTED, null);

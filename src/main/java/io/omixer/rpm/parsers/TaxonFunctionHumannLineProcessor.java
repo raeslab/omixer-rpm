@@ -36,5 +36,10 @@ public class TaxonFunctionHumannLineProcessor extends FunctionLineProcessor {
 		// return the feature
 		return feature;
 	}
+
+	@Override
+	protected String expectedFormat() {
+		return "KO[|taxon]<TAB>one abundance per sample";
+	}
 }
 

@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import io.omixer.rpm.exceptions.DuplicateSampleNameException;
 import io.omixer.rpm.exceptions.InputFormatException;
 import io.omixer.rpm.model.BasicFeature;
 import io.omixer.rpm.model.Module;
@@ -37,13 +38,13 @@ import io.omixer.rpm.model.optimizers.ModuleAbundanceCoverageReactionMaximizer;
 import io.omixer.rpm.model.optimizers.ModuleScoreCalculator;
 import io.omixer.rpm.parsers.FunctionLineProcessor;
 import io.omixer.rpm.parsers.FunctionRowMapper;
-import io.omixer.rpm.parsers.InputLine;
 import io.omixer.rpm.parsers.TaxonFunctionHumannLineProcessor;
 import io.omixer.rpm.parsers.TaxonFunctionLineProcessor;
 import io.omixer.rpm.parsers.TaxonFunctionRowMapper;
 import io.omixer.rpm.service.ModuleManager;
 import io.omixer.utils.Constants;
 import io.omixer.utils.exceptions.IncorrectNumberOfEntriesException;
+import io.omixer.utils.readers.FileLine;
 import io.omixer.utils.readers.MatrixLineProcessor;
 import io.omixer.utils.utils.FileUtils;
 
@@ -147,6 +148,7 @@ public class ModuleManagerImpl implements ModuleManager {
 			sampleOrthologs = FileUtils.readMatrix(input, Constants.TAB, mlp);
 		}
 		log.debug("Loaded samples in " + ((System.currentTimeMillis() - start)/1000));
+		warnAboutNumericFunctions(sampleOrthologs);
 			
 		// create a stream to process the data per samples
 		Stream<Entry<String, List<BasicFeature>>> stream = isConcurrent()
@@ -166,6 +168,20 @@ public class ModuleManagerImpl implements ModuleManager {
 	}
 
 	/**
+	 * Function ids that read as numbers usually mean an abundance column was read as the function column, i.e. the
+	 * wrong input annotation format (-a). Only a warning: the ids are not checked against a fixed list, so that
+	 * annotations from newer databases still work.
+	 */
+	private void warnAboutNumericFunctions(Map<String, List<BasicFeature>> sampleOrthologs) {
+		List<String> numericFunctions = sampleOrthologs.values().stream().flatMap(List::stream)
+				.filter(BasicFeature::isFunctionNumeric).map(BasicFeature::getFunction).distinct().limit(3).toList();
+		if (!numericFunctions.isEmpty()) {
+			log.warn("Some function ids in the input are numbers (e.g. " + String.join(", ", numericFunctions)
+					+ "): please check that the annotation format (-a) matches the input");
+		}
+	}
+
+	/**
 	 * Reads a directory with one headerless file per sample. Sub-directories and hidden files (e.g. .DS_Store)
 	 * are skipped; any other file must be a sample.
 	 * 
@@ -178,32 +194,48 @@ public class ModuleManagerImpl implements ModuleManager {
 			// input is a directory, so a null listing means it could not be read
 			throw new IOException("Cannot list the files of input directory " + input);
 		}
-		Function<InputLine, BasicFeature> rowMapper = getInputFormat().equals("1") ? new FunctionRowMapper()
+		Function<FileLine, BasicFeature> rowMapper = getInputFormat().equals("1") ? new FunctionRowMapper()
 				: new TaxonFunctionRowMapper();
 		// samples in file name order
 		Arrays.sort(files, Comparator.comparing(File::getName));
 		Map<String, List<BasicFeature>> sampleOrthologs = new LinkedHashMap<>();
+		// sample name => the file it comes from, to report two files giving the same name
+		Map<String, File> sampleFiles = new HashMap<>();
 		for (File file : files) {
 			if (!file.isFile() || file.isHidden()) {
 				continue;
 			}
-			// FIXME careful not to remove more than necessary
-			sampleOrthologs.put(file.getName().split("\\.")[0], readSampleFile(file, rowMapper));
+			String sample = sampleName(file);
+			File other = sampleFiles.putIfAbsent(sample, file);
+			if (other != null) {
+				throw new DuplicateSampleNameException("Files " + other.getName() + " and " + file.getName() + " in "
+						+ input + " both give sample name '" + sample + "'");
+			}
+			sampleOrthologs.put(sample, readSampleFile(file, rowMapper));
 		}
 		return sampleOrthologs;
 	}
 
 	/**
+	 * The sample name of a file is its name without the last extension, e.g. run.v2.tsv gives run.v2
+	 */
+	private static String sampleName(File file) {
+		String name = file.getName();
+		int extension = name.lastIndexOf('.');
+		return extension > 0 ? name.substring(0, extension) : name;
+	}
+
+	/**
 	 * Maps every line of a headerless sample file, passing the file name and line number along for error messages
 	 */
-	private List<BasicFeature> readSampleFile(File file, Function<InputLine, BasicFeature> rowMapper)
+	private List<BasicFeature> readSampleFile(File file, Function<FileLine, BasicFeature> rowMapper)
 			throws IOException {
 		List<BasicFeature> features = new ArrayList<>();
 		try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
 			String text;
 			int lineNumber = 0;
 			while ((text = reader.readLine()) != null) {
-				features.add(rowMapper.apply(new InputLine(file.getName(), ++lineNumber, text)));
+				features.add(rowMapper.apply(new FileLine(file.getName(), ++lineNumber, text)));
 			}
 		}
 		return features;

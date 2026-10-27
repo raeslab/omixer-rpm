@@ -29,10 +29,19 @@ public class ModuleCoverageDistributionSpec extends Specification {
 	def "findOptimalCoverage return 0.6 based on the highest drop"() {
 
 		when: "optimal coverage is the value that gives the highest decrease in module count"
-		double optimalcoverage = distribution.findOptimalCoverage();
-		
+		Optional<Double> optimalcoverage = distribution.findOptimalCoverage();
+
 		then: "coverage should be 0.6"
-		optimalcoverage == 0.6
+		optimalcoverage == Optional.of(0.6d)
+	}
+
+	def "a distribution without any observed module has no optimal coverage"() {
+
+		when: "every module has coverage 0, e.g. an all-zero input"
+		def empty = new ModuleCoverageDistribution([])
+
+		then: "no cutoff instead of an ArrayIndexOutOfBoundsException"
+		empty.findOptimalCoverage() == Optional.empty()
 	}
 
 	def "toSVG produces the same plot as the predefined distribution plot"() throws IOException {
