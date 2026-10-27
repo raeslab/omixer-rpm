@@ -3,12 +3,14 @@ package io.omixer.rpm.core;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -23,6 +25,7 @@ import io.omixer.rpm.model.Module;
 import io.omixer.rpm.model.ModuleCoverageDistribution;
 import io.omixer.rpm.model.ModuleInferenceOptions;
 import io.omixer.rpm.model.Modules;
+import io.omixer.rpm.model.enums.ComplexRule;
 import io.omixer.rpm.model.enums.ModuleInferenceOptimizers;
 import io.omixer.rpm.model.enums.ScalingMethod;
 import io.omixer.rpm.model.io.MatrixWriter;
@@ -51,6 +54,10 @@ public class InferenceApp extends AbstractInferenceApp {
 	/** Accepted values of --score-estimator, used in the help text and in its error message */
 	private static final List<String> SCORE_ESTIMATORS = List.of("median", "average", "sum", "min");
 
+	/** Accepted values of --complex-rule, from the rules themselves */
+	private static final String COMPLEX_RULES = Arrays.stream(ComplexRule.values()).map(ComplexRule::cliName)
+			.collect(Collectors.joining("|"));
+
 	public static final String FOOTER = "\nLicensed under an Academic Non-commercial Software License Agreement, https://github.com/raeslab/omixer-rpm/blob/master/LICENSE";
 
 	public static void main(String[] args) {
@@ -67,6 +74,14 @@ public class InferenceApp extends AbstractInferenceApp {
 		options.addOption(Option.builder("s").longOpt("score-estimator")
 				.desc("The score estimator.\nAccepted values are [" + String.join("|", SCORE_ESTIMATORS) + "].\nDefaults to median").hasArg()
 				.argName("SCORE-ESTIMATOR").build());
+
+		options.addOption(Option.builder().longOpt("complex-rule")
+				.desc("How a complex step (subunits written K1,K2 in the module database) counts when only some subunits are observed.\n"
+						+ "any: observed when at least one subunit is, since a missing subunit is more often unsampled than absent;\n"
+						+ "all: observed only when every subunit is (otherwise no coverage and no abundance);\n"
+						+ "fraction: like any, but earns coverage in proportion to its observed subunits.\n"
+						+ "Accepted values are [" + COMPLEX_RULES + "].\nDefaults to any")
+				.hasArg().argName("RULE").build());
 
 		options.addOption(Option.builder("n").longOpt("normalize-by-length")
 				.desc("Divide module score by its length. When combined with a median estimator, missing reactions (score = 0 )\n"
@@ -115,6 +130,7 @@ public class InferenceApp extends AbstractInferenceApp {
 		boolean normalizeByLength = false;
 		boolean isPerTaxon = false;
 		boolean isDistributeOrhologAbundance = false;
+		ComplexRule complexRule = ComplexRule.ANY;
 
 		ScalingMethod scalingMethod = ScalingMethod.NONE;
 		// Use name match and get id
@@ -171,6 +187,12 @@ public class InferenceApp extends AbstractInferenceApp {
 					throw new IllegalArgumentException(estimator
 							+ " is not a valid score estimator. Please choose one of [" + String.join("|", SCORE_ESTIMATORS) + "]");
 				}
+			}
+
+			if (line.hasOption("complex-rule")) {
+				String rule = line.getOptionValue("complex-rule");
+				complexRule = ComplexRule.fromName(rule).orElseThrow(() -> new IllegalArgumentException(
+						rule + " is not a valid complex rule. Please choose one of [" + COMPLEX_RULES + "]"));
 			}
 
 			if (line.hasOption('n')) {
@@ -259,6 +281,7 @@ public class InferenceApp extends AbstractInferenceApp {
 		moduleInferenceOptions.setNormalizeByLength(normalizeByLength);
 		moduleInferenceOptions.setPerTaxon(isPerTaxon);
 		moduleInferenceOptions.setDistributeOrhologAbundance(isDistributeOrhologAbundance);
+		moduleInferenceOptions.setComplexRule(complexRule);
 		long start = System.currentTimeMillis();
 		// false when no module is observed in any sample, so that no automatic cutoff exists
 		boolean modulesObserved = true;

@@ -350,17 +350,17 @@ public class ModuleManagerImpl implements ModuleManager {
 		
 		if (options.getAlgorithm()
 				.equals(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_REACTION_BASED.displayName())) {
-			optimizer = new ModuleAbundanceCoverageReactionMaximizer(options.isNormalizeByLength());
+			optimizer = new ModuleAbundanceCoverageReactionMaximizer(options.isNormalizeByLength(), options.getComplexRule());
 		} else if (options.getAlgorithm()
 				.equals(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_ORTHOLOG_BASED.displayName())) {
 			optimizer = new ModuleAbundanceCoverageOrthologMaximizer(options.isNormalizeByLength());
 		} else if (options.getAlgorithm()
 				.equals(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_MEDIAN_BASED.displayName())) {
-			optimizer = new ModuleAbundanceCoverageMedianMaximizer(options.isNormalizeByLength());
+			optimizer = new ModuleAbundanceCoverageMedianMaximizer(options.isNormalizeByLength(), options.getComplexRule());
 		} else if (options.getAlgorithm().equals(ModuleInferenceOptimizers.SUM.displayName())) {
-			optimizer = new ModuleAbundanceCoverageAbundanceSumMaximizer(options.isNormalizeByLength());
+			optimizer = new ModuleAbundanceCoverageAbundanceSumMaximizer(options.isNormalizeByLength(), options.getComplexRule());
 		} else if (options.getAlgorithm().equals(ModuleInferenceOptimizers.MIN.displayName())) {
-			optimizer = new ModuleAbundanceCoverageAbundanceMinimizer(options.isNormalizeByLength());
+			optimizer = new ModuleAbundanceCoverageAbundanceMinimizer(options.isNormalizeByLength(), options.getComplexRule());
 		}
 
 		// call the optimizer

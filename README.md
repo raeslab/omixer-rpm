@@ -2,7 +2,7 @@
 A **R**eference **P**athways **M**apper for turning metagenomic functional profiles into pathway/module profiles.
 
 #### Usage
-java -jar [omixer-rpm.jar](../../releases/latest)  [-a <ANNOTATION>] [-c <COVERAGE>] [-d <FILE>] [-e <FORMAT>] [-h] [-i <PATH>] [--ignore-taxonomic-info] [-n] [-o <DIRECTORY>] [-s <SCORE-ESTIMATOR>] [-t <THREADS>] [--Xdistribute]
+java -jar [omixer-rpm.jar](../../releases/latest)  [-a <ANNOTATION>] [-c <COVERAGE>] [--complex-rule <RULE>] [-d <FILE>] [-e <FORMAT>] [-h] [-i <PATH>] [--ignore-taxonomic-info] [-n] [-o <DIRECTORY>] [-s <SCORE-ESTIMATOR>] [-t <THREADS>] [--Xdistribute]
 
 <pre>
  -a,--annotation <ANNOTATION>             Input file annotation.
@@ -10,20 +10,26 @@ java -jar [omixer-rpm.jar](../../releases/latest)  [-a <ANNOTATION>] [-c <COVERA
                               Defaults to 1
  -c,--coverage <COVERAGE>               The minimum coverage cut-off to accept a module [0.0 to 1.0].
                               Defaults to -1, where the coverage is learned from the coverage distribution of all modules
+    --complex-rule <RULE>           How a complex step (subunits written K1,K2 in the module database) counts when only some subunits are observed.
+                              any: observed when at least one subunit is, since a missing subunit is more often unsampled than absent;
+                              all: observed only when every subunit is (otherwise no coverage and no abundance);
+                              fraction: like any, but earns coverage in proportion to its observed subunits.
+                              Accepted values are [any|all|fraction].
+                              Defaults to any
  -d,--database <FILE>               The path to the modules database
  -e,--export-format <FORMAT>          The output file format.
                               Use 1 for single tab separated files containing module id, abundance and coverage. 
                               Use 2 for an abundance and a coverage matrices.
                               Defaults to 1.
  -h,--help                    Show this help message and exit
- -i,--input <PATH>                  Path to the input matrix or input directory with one file per sample
+ -i,--input <PATH>                  Path to the input matrix or input directory with one headerless file per sample
     --ignore-taxonomic-info   Ignore taxonomic info from input file and infer modules for the whole metagenome instead
  -n,--normalize-by-length     Divide module score by its length. When combined with a median estimator, missing reactions (score = 0 )
                               are included when estimating the median. If the estimated score equals zero then it is replaced by
                               the minimum observed reaction score. If this option is specified, score calculation is based only on
                               the number of observed reactions
  -o,--output-dir <DIRECTORY>             Path to the output directory
- -s,--score-estimator <SCORE-ESTIMATOR>        The score estimatore.
+ -s,--score-estimator <SCORE-ESTIMATOR>        The score estimator.
                               Accepted values are [median|average|sum|min].
                               Defaults to median
  -t,--threads <THREADS>                Number of threads to use when mapping the modules.
@@ -64,6 +70,11 @@ As defined in the database snippet above, a metabolic module is a set of alterna
 that represent a cellular process. Given a metagenome, Omixer-RPM will select the modules that pass a 
 user defined coverage (# observed steps / # defined steps) cutoff, then derives their abundance 
 by selecting, for each module, the combination of orthologs that maximize its abundance.
+
+A complex step (comma-separated orthologs, the subunits of one enzyme) counts as observed when at least one 
+of its subunits is observed. Use `--complex-rule` to choose how complex steps are counted: `any` (default) 
+for at least one subunit, `all` to require every subunit, or `fraction` to credit the step in proportion 
+to its observed subunits.
 
 For example, given the following module definition and profile
 <pre>

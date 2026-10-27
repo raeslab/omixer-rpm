@@ -1,5 +1,7 @@
 package io.omixer.rpm.model.optimizers;
 
+import io.omixer.rpm.model.enums.ComplexRule;
+
 /**
  * 
  * Computes the score and coverage as a function of orthologs present in the pathway.
@@ -10,8 +12,8 @@ package io.omixer.rpm.model.optimizers;
  */
 public class ModuleAbundanceCoverageAbundanceSumMaximizer extends ModuleAbundanceMaximizer {
 	
-	public ModuleAbundanceCoverageAbundanceSumMaximizer(boolean normalizeByLength) {
-		super(normalizeByLength);
+	public ModuleAbundanceCoverageAbundanceSumMaximizer(boolean normalizeByLength, ComplexRule complexRule) {
+		super(normalizeByLength, complexRule);
 	}
 
 	/**

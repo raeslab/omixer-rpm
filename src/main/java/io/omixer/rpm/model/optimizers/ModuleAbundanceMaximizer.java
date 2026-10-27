@@ -4,6 +4,7 @@ import java.util.List;
 
 import io.omixer.rpm.model.Ortholog;
 import io.omixer.rpm.model.PathwaySummary;
+import io.omixer.rpm.model.enums.ComplexRule;
 
 
 /**
@@ -15,8 +16,8 @@ import io.omixer.rpm.model.PathwaySummary;
  */
 public abstract class ModuleAbundanceMaximizer extends ModuleAbundanceCoverageOptimizer {
 
-	public ModuleAbundanceMaximizer(boolean normalizeByLength) {
-		super(normalizeByLength);
+	public ModuleAbundanceMaximizer(boolean normalizeByLength, ComplexRule complexRule) {
+		super(normalizeByLength, complexRule);
 	}
 	
 	/**
@@ -38,7 +39,9 @@ public abstract class ModuleAbundanceMaximizer extends ModuleAbundanceCoverageOp
 	protected PathwaySummary computePathScoreAndCoverage(List<List<Ortholog>> path) {
 
 		double pathLength = path.size();
-		double presentSteps = 0;
+		// coverage earned by the steps, according to the complex rule
+		double coveredSteps = 0;
+		double observedSteps = 0;
 		double pathCount = 0;
 
 		// each step
@@ -50,18 +53,19 @@ public abstract class ModuleAbundanceMaximizer extends ModuleAbundanceCoverageOp
 			for (int j = 0; j < stepSize; j++) {
 				stepCount += step.get(j).getCount();
 			}
-			pathCount += (stepCount / stepSize);
-
-			if (stepCount > 0) {
-				presentSteps++;
+			coveredSteps += complexRule.coverage(step);
+			// only an observed step contributes abundance
+			if (complexRule.isObserved(step)) {
+				pathCount += (stepCount / stepSize);
+				observedSteps++;
 			}
 		}
 		
-		double normalizer = getNormalizer(pathLength, presentSteps);
+		double normalizer = getNormalizer(pathLength, observedSteps);
 		
 		// no observed step with an observed-steps normalizer: abundance 0 instead of 0 / 0 = NaN
 		double pathScore = normalizer == 0 ? 0 : pathCount / normalizer;
-		double coverage = presentSteps / pathLength;
+		double coverage = coveredSteps / pathLength;
 		return new PathwaySummary(path, coverage, pathScore);
 	}
 }

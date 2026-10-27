@@ -5,6 +5,7 @@ import java.util.List;
 import io.omixer.rpm.model.ModuleInferenceOptions;
 import io.omixer.rpm.model.Ortholog;
 import io.omixer.rpm.model.PathwaySummary;
+import io.omixer.rpm.model.enums.ComplexRule;
 
 /**
  * 
@@ -19,9 +20,12 @@ import io.omixer.rpm.model.PathwaySummary;
 public abstract class ModuleAbundanceCoverageOptimizer implements ModuleScoreCalculator {
 
 	protected boolean normalizeByLength;
+	/** How a partially observed complex step counts: whether it is observed and what coverage it earns */
+	protected final ComplexRule complexRule;
 	
-	public ModuleAbundanceCoverageOptimizer(boolean normalizeByLength) {
+	public ModuleAbundanceCoverageOptimizer(boolean normalizeByLength, ComplexRule complexRule) {
 		this.normalizeByLength = normalizeByLength;
+		this.complexRule = complexRule;
 	}
 	
 	public void setNormalizeByLength(boolean normalizeByLength) {

@@ -4,6 +4,7 @@ import java.util.List;
 
 import io.omixer.rpm.model.Ortholog;
 import io.omixer.rpm.model.PathwaySummary;
+import io.omixer.rpm.model.enums.ComplexRule;
 
 
 /**
@@ -16,7 +17,8 @@ import io.omixer.rpm.model.PathwaySummary;
 public class ModuleAbundanceCoverageOrthologMaximizer extends ModuleAbundanceCoverageOptimizer {
 
 	public ModuleAbundanceCoverageOrthologMaximizer(boolean normalizeByLength) {
-		super(normalizeByLength);
+		// unreachable from the CLI and scheduled for deletion: counts orthologs, not steps, so no complex rule
+		super(normalizeByLength, ComplexRule.ANY);
 	}
 
 	/**

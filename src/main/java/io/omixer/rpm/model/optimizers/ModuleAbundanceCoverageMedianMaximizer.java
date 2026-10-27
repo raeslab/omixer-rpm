@@ -7,6 +7,7 @@ import java.util.List;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
 import io.omixer.rpm.model.Ortholog;
 import io.omixer.rpm.model.PathwaySummary;
+import io.omixer.rpm.model.enums.ComplexRule;
 import io.omixer.utils.Constants;
 
 
@@ -21,8 +22,8 @@ import io.omixer.utils.Constants;
  */
 public class ModuleAbundanceCoverageMedianMaximizer extends ModuleAbundanceCoverageOptimizer {
 
-	public ModuleAbundanceCoverageMedianMaximizer(boolean normalizeByLength) {
-		super(normalizeByLength);
+	public ModuleAbundanceCoverageMedianMaximizer(boolean normalizeByLength, ComplexRule complexRule) {
+		super(normalizeByLength, complexRule);
 	}
 
 	/** 
@@ -35,7 +36,8 @@ public class ModuleAbundanceCoverageMedianMaximizer extends ModuleAbundanceCover
 	protected PathwaySummary computePathScoreAndCoverage(List<List<Ortholog>> path) {
 
 		double pathLength = path.size();
-		Double presentSteps = 0d;
+		// coverage earned by the steps, according to the complex rule
+		double coveredSteps = 0;
 		List<Double> observedValues = new ArrayList<Double>();
 		
 		// each step
@@ -47,9 +49,9 @@ public class ModuleAbundanceCoverageMedianMaximizer extends ModuleAbundanceCover
 			for (int j = 0; j < stepSize; j++) {
 				stepCount += step.get(j).getCount();
 			}
+			coveredSteps += complexRule.coverage(step);
 			// Step is observed
-			if (Double.compare(stepCount, Constants.ZERO) > 0) {
-				presentSteps++;
+			if (complexRule.isObserved(step)) {
 				// divide observed value by step size to have the mean for complex steps
 				observedValues.add(stepCount / stepSize);
 			} else if (isNormalizeByLength()){
@@ -57,15 +59,8 @@ public class ModuleAbundanceCoverageMedianMaximizer extends ModuleAbundanceCover
 				observedValues.add(Constants.ZERO);
 			}
 		}
-		// the array of observations
-		int obsevationLength = presentSteps.intValue();
-		if (isNormalizeByLength()) {
-			obsevationLength = Double.valueOf(pathLength).intValue();
-		}
-		double[] observedArray = new double[obsevationLength];
-		for (int i = 0; i < obsevationLength; i++) {
-			observedArray[i] = observedValues.get(i);
-		}
+		// the array of observations: the observed steps, plus a 0 for each unobserved step with -n
+		double[] observedArray = observedValues.stream().mapToDouble(Double::doubleValue).toArray();
 
 		// no observed step: abundance 0 (the median of no value is NaN)
 		double pathScore = observedArray.length == 0 ? Constants.ZERO : new Median().evaluate(observedArray);
@@ -83,7 +78,7 @@ public class ModuleAbundanceCoverageMedianMaximizer extends ModuleAbundanceCover
 			}
 		}
 		
-		double coverage = presentSteps / pathLength;
+		double coverage = coveredSteps / pathLength;
 		return new PathwaySummary(path, coverage, pathScore);
 	}
 }

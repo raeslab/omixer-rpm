@@ -4,6 +4,7 @@ import java.util.List;
 
 import io.omixer.rpm.model.Ortholog;
 import io.omixer.rpm.model.PathwaySummary;
+import io.omixer.rpm.model.enums.ComplexRule;
 
 
 /**
@@ -15,8 +16,8 @@ import io.omixer.rpm.model.PathwaySummary;
  */
 public class ModuleAbundanceCoverageAbundanceMinimizer extends ModuleAbundanceCoverageOptimizer {
 	
-	public ModuleAbundanceCoverageAbundanceMinimizer(boolean normalizeByLength) {
-		super(normalizeByLength);
+	public ModuleAbundanceCoverageAbundanceMinimizer(boolean normalizeByLength, ComplexRule complexRule) {
+		super(normalizeByLength, complexRule);
 	}
 
 	/** 
@@ -31,13 +32,12 @@ public class ModuleAbundanceCoverageAbundanceMinimizer extends ModuleAbundanceCo
 		double pathLength = path.size();
 		// abundance and coverage are computed independently: a shared counter used to make the minimum skip
 		// the first observed step's subunits but the last one
-		// the minimum: the smallest abundance of a present ortholog, 0 when none is present
-		double pathScore = path.stream().flatMap(List::stream).mapToDouble(Ortholog::getCount)
-				.filter(count -> count > 0).min().orElse(0);
-		// the coverage: the fraction of steps with at least one present ortholog
-		double presentSteps = path.stream().filter(step -> step.stream().anyMatch(ortholog -> ortholog.getCount() > 0))
-				.count();
-		double coverage = presentSteps / pathLength;
+		// the minimum: the smallest abundance of a present ortholog of an observed step, 0 when there is none
+		double pathScore = path.stream().filter(complexRule::isObserved).flatMap(List::stream)
+				.mapToDouble(Ortholog::getCount).filter(count -> count > 0).min().orElse(0);
+		// the coverage earned by the steps, according to the complex rule
+		double coveredSteps = path.stream().mapToDouble(complexRule::coverage).sum();
+		double coverage = coveredSteps / pathLength;
 		return new PathwaySummary(path, coverage, pathScore);
 	}
 }

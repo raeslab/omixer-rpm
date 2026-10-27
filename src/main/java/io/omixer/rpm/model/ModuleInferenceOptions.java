@@ -2,6 +2,7 @@ package io.omixer.rpm.model;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import io.omixer.rpm.model.enums.ComplexRule;
 import io.omixer.rpm.model.enums.ScalingMethod;
 
 
@@ -19,6 +20,10 @@ public class ModuleInferenceOptions {
 	 * Expertimental option
 	 */
 	private boolean distributeOrhologAbundance;
+	/*
+	 * How a partially observed complex step counts
+	 */
+	private ComplexRule complexRule = ComplexRule.ANY;
 	
 	/**
 	 * @return the id
@@ -58,6 +63,10 @@ public class ModuleInferenceOptions {
 	
 	public boolean isDistributeOrhologAbundance() {
 		return distributeOrhologAbundance;
+	}
+	
+	public ComplexRule getComplexRule() {
+		return complexRule;
 	}
 	
 	/**
@@ -122,6 +131,10 @@ public class ModuleInferenceOptions {
 	
 	public void setDistributeOrhologAbundance(boolean distributeOrhologAbundance) {
 		this.distributeOrhologAbundance = distributeOrhologAbundance;
+	}
+	
+	public void setComplexRule(ComplexRule complexRule) {
+		this.complexRule = complexRule;
 	}
 	
 	public void setScalingMethod(ScalingMethod scalingMethod) {
