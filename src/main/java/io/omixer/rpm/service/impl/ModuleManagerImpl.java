@@ -6,10 +6,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -251,51 +253,55 @@ public class ModuleManagerImpl implements ModuleManager {
 
 		// mapping of ortholog id to its abundance
 		Map<String, Double> orthologAbundanceMap = makeOrthologAbundanceMap(orthologs);
-		// A map of KO to Modules
-		Map<String, List<Module>> koModules = new HashMap<>();
+		/*
+		 * Clone to leave the reference modules untouched, as in inferModulesCore: the methods below
+		 * change the module state, and the same reference modules are reused for every taxon (B01).
+		 */
+		List<Module> predictedModules = modules.stream().map(Module::clone).collect(Collectors.toList());
+		// A map of KO to the distinct Modules it occurs in. Module does not override equals, so the set is
+		// identity-based: a KO repeated inside one module counts that module once (B02)
+		Map<String, Set<Module>> koModules = new HashMap<>();
 		// give counts to orthologs in order to quantify
-		for (Module module : modules) {
+		for (Module module : predictedModules) {
 			for (Ortholog ortholog : module.getFlatOrthologs()) {
 				Double count = orthologAbundanceMap.get(ortholog.getOrthologId());
 				if (count != null) {
 					ortholog.setCount(count);
-					// Populate the list of observed modules
-					List<Module> observedModules = koModules.get(ortholog.getOrthologId());
-					if (observedModules == null) {
-						observedModules = new ArrayList<>();
-						koModules.put(ortholog.getOrthologId(), observedModules);
-					}
-					observedModules.add(module);
+					// Populate the set of observed modules
+					koModules.computeIfAbsent(ortholog.getOrthologId(), ko -> new LinkedHashSet<>()).add(module);
 				} else {
 					ortholog.setCount(0);
 				}
 			}
 		}
-		
+
 		/*
 		 * Redistribute the values of Orthologs that appear in several modules
 		 * This is an unbiased distribution as the value is simply divided
 		 * by the number of modules to which it maps.
 		 */
-		for (Entry<String, List<Module>> entry : koModules.entrySet()) {
+		for (Entry<String, Set<Module>> entry : koModules.entrySet()) {
 			int observedModulesCount = entry.getValue().size();
 			// if Ortholog is observed in more than one Module
 			if (observedModulesCount > 1) {
 				// Proportion the value
 				double proportionnedValue = orthologAbundanceMap.get(entry.getKey()) / observedModulesCount;
 				for (Module m : entry.getValue()) {
-					Map<String, Ortholog> orthologsMap = m.getFlatOrthologsAsMap();
-					// update the value of the matched Ortholog
-					orthologsMap.get(entry.getKey()).setCount(proportionnedValue);
+					// update every occurrence of the Ortholog in this module, not only one of them (B02)
+					for (Ortholog ortholog : m.getFlatOrthologs()) {
+						if (ortholog.getOrthologId().equals(entry.getKey())) {
+							ortholog.setCount(proportionnedValue);
+						}
+					}
 				}
 			}
 		}
-		
-		for (Module module : modules) {
+
+		for (Module module : predictedModules) {
 			optimizeModule(module, options);
 		}
 
-		return new Modules(modules, options.getCoverage());
+		return new Modules(predictedModules, options.getCoverage());
 	}
 	
 	protected Module optimizeModule(Module module, ModuleInferenceOptions options) {
