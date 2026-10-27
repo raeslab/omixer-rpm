@@ -9,25 +9,21 @@ public enum ModuleInferenceOptimizers {
 	MIN;
 	
 	public String displayName() {
-				
-		switch (this) {
-		case ABUNDANCE_COVERAGE_ORTHOLOG_BASED:
-			return "ABUNDANCE_COVERAGE_ORTHOLOG_BASED";
-		default:
-			return toString();
-		}
 
-	}
+        if (this == ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_ORTHOLOG_BASED) {
+            return "ABUNDANCE_COVERAGE_ORTHOLOG_BASED";
+        }
+        return toString();
+
+    }
 
 	public static ModuleInferenceOptimizers forName(String name) {
-	
-		if (name.equals("ABUNDANCE_COVERAGE_ORTHOLOG_BASED")) {
-			return ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_ORTHOLOG_BASED;
-		} else if (name.equals("ABUNDANCE_COVERAGE_REACTION_BASED")) {
-			return ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_REACTION_BASED;
-		} else if (name.equals("ABUNDANCE_COVERAGE_MEDIAN_BASED")) {
-			return ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_MEDIAN_BASED;
-		} 
-		return null;
-	}
+
+        return switch (name) {
+            case "ABUNDANCE_COVERAGE_ORTHOLOG_BASED" -> ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_ORTHOLOG_BASED;
+            case "ABUNDANCE_COVERAGE_REACTION_BASED" -> ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_REACTION_BASED;
+            case "ABUNDANCE_COVERAGE_MEDIAN_BASED" -> ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_MEDIAN_BASED;
+            default -> null;
+        };
+    }
 }
