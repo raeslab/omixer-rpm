@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2 (unreleased)
+## 1.2 (2026-10-28)
 
 Compared with 1.1. Unless an item under "Changed results" applies, 1.2 gives the same numbers as 1.1.
 
