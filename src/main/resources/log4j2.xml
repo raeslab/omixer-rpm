@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+
+	<Appenders>
+		<Console name="CONSOLE" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d{dd-MM-yyyy HH:mm:ss.SSS}:%p - %C{1}.%M(%L) | %m%n"/>
+		</Console>
+	</Appenders>
+
+	<Loggers>
+		<Logger name="org.apache" level="WARN"/>
+		<Logger name="io.omixer.rpm" level="INFO"/>
+		<Root level="INFO">
+			<AppenderRef ref="CONSOLE"/>
+		</Root>
+	</Loggers>
+
+</Configuration>

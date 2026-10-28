@@ -1,0 +1,13 @@
+X001	repeated KO, used by no other module
+K10001
+K10002
+K10001
+///
+X002	shared KO in two alternative complexes of one step
+K10010,K10013	K10010,K10014
+K10015
+///
+X003	shares K10010 with X002
+K10010
+K10016
+///
