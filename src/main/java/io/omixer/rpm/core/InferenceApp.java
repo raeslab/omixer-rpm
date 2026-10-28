@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -46,9 +47,12 @@ public class InferenceApp extends AbstractInferenceApp {
 
 	public static final String TOOL_NAME="omixer-rpm.jar";
 	public static final String EXEC_COMMAND = "java -jar " + TOOL_NAME + " ";
+	/** The build version, from the jar manifest; absent when not running from a jar (e.g. in the IDE) */
+	public static final String VERSION = Objects.requireNonNullElse(InferenceApp.class.getPackage().getImplementationVersion(),
+			"unknown");
 	public static final String HEADER = "\n\nDESCRIPTION\n"
 			+ " Omixer-RPM\n A Reference Pathways Mapper for turning metagenomic functional profiles into pathway/module profiles\n\n"
-			+ "VERSION: 1.1\n" + "AUTHOR: Youssef Darzi <youssef.darzi@gmail.com>\n\n"
+			+ "VERSION: " + VERSION + "\n" + "AUTHOR: Youssef Darzi <youssef.darzi@gmail.com>\n\n"
 			+ "ARGUMENTS (Options starting with -X are non-standard and subject to change without notice.)\n\n";
 
 	/** Accepted values of --score-estimator, used in the help text and in its error message */

@@ -44,5 +44,7 @@ test {
 jar {
 	manifest {
 		attributes 'Main-Class': 'io.omixer.rpm.core.InferenceApp'
+		// read back by the help banner
+		attributes 'Implementation-Version': project.version
 	}
 }
