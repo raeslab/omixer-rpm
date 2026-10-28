@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "io.omixer"
-version = '1.2'
+version = '1.2.1'
 
 // Minimum Java version for users; compiles and runs the tests on this JDK
 java {

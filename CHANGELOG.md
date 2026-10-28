@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.1 (2026-10-28)
+
+### Fixed
+- **B25** The jar exits with a non-zero status on errors: 2 for a command line error, 1 for an input or run error.
+  Before, it exited with 0, so scripts, pipelines and the `omixerRpm` R package could not detect a failed run.
+  Results are unchanged.
+
 ## 1.2 (2026-10-28)
 
 Compared with 1.1. Unless an item under "Changed results" applies, 1.2 gives the same numbers as 1.1.
