@@ -12,9 +12,8 @@ java -jar [omixer-rpm.jar](../../releases/latest)  [-a <ANNOTATION>] [-c <COVERA
                               Defaults to -1, where the coverage is learned from the coverage distribution of all modules
     --complex-rule <RULE>           How a complex step (subunits written K1,K2 in the module database) counts when only some subunits are observed.
                               any: observed when at least one subunit is, since a missing subunit is more often unsampled than absent;
-                              all: observed only when every subunit is (otherwise no coverage and no abundance);
-                              fraction: like any, but earns coverage in proportion to its observed subunits.
-                              Accepted values are [any|all|fraction].
+                              all: observed only when every subunit is (otherwise no coverage and no abundance).
+                              Accepted values are [any|all].
                               Defaults to any
  -d,--database <FILE>               The path to the modules database
  -e,--export-format <FORMAT>          The output file format.
@@ -73,8 +72,7 @@ by selecting, for each module, the combination of orthologs that maximize its ab
 
 A complex step (comma-separated orthologs, the subunits of one enzyme) counts as observed when at least one 
 of its subunits is observed. Use `--complex-rule` to choose how complex steps are counted: `any` (default) 
-for at least one subunit, `all` to require every subunit, or `fraction` to credit the step in proportion 
-to its observed subunits.
+for at least one subunit, or `all` to require every subunit.
 
 For example, given the following module definition and profile
 <pre>

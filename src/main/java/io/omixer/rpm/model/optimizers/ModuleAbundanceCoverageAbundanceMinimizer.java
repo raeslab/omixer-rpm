@@ -35,8 +35,8 @@ public class ModuleAbundanceCoverageAbundanceMinimizer extends ModuleAbundanceCo
 		// the minimum: the smallest abundance of a present ortholog of an observed step, 0 when there is none
 		double pathScore = path.stream().filter(complexRule::isObserved).flatMap(List::stream)
 				.mapToDouble(Ortholog::getCount).filter(count -> count > 0).min().orElse(0);
-		// the coverage earned by the steps, according to the complex rule
-		double coveredSteps = path.stream().mapToDouble(complexRule::coverage).sum();
+		// the observed steps, according to the complex rule
+		double coveredSteps = path.stream().filter(complexRule::isObserved).count();
 		double coverage = coveredSteps / pathLength;
 		return new PathwaySummary(path, coverage, pathScore);
 	}

@@ -9,8 +9,8 @@ import io.omixer.rpm.model.Ortholog;
  * How a step made of a complex (several subunits, written K1,K2 in the module database) counts when only some of
  * its subunits are observed. A step with a single ortholog is observed or not, whatever the rule.
  *
- * Stateless: one place decides, for every score estimator, whether a step is observed (contributes abundance) and
- * how much coverage it earns.
+ * Stateless: one place decides, for every score estimator, whether a step is observed. An observed step earns
+ * coverage and contributes abundance; any other step does neither.
  */
 public enum ComplexRule {
 
@@ -20,11 +20,6 @@ public enum ComplexRule {
 		public boolean isObserved(List<Ortholog> step) {
 			return presentSubunits(step) > 0;
 		}
-
-		@Override
-		public double coverage(List<Ortholog> step) {
-			return isObserved(step) ? 1 : 0;
-		}
 	},
 
 	/** Observed only when every subunit is; otherwise no coverage and no abundance, like an unobserved step */
@@ -33,37 +28,13 @@ public enum ComplexRule {
 		public boolean isObserved(List<Ortholog> step) {
 			return presentSubunits(step) == step.size();
 		}
-
-		@Override
-		public double coverage(List<Ortholog> step) {
-			return isObserved(step) ? 1 : 0;
-		}
-	},
-
-	/** Observed like ANY, but earns coverage in proportion to its observed subunits */
-	FRACTION {
-		@Override
-		public boolean isObserved(List<Ortholog> step) {
-			return presentSubunits(step) > 0;
-		}
-
-		@Override
-		public double coverage(List<Ortholog> step) {
-			return (double) presentSubunits(step) / step.size();
-		}
 	};
 
 	/**
 	 * @param step the orthologs of one alternative of a step (several for a complex)
-	 * @return true if the step contributes abundance
+	 * @return true if the step earns coverage and contributes abundance
 	 */
 	public abstract boolean isObserved(List<Ortholog> step);
-
-	/**
-	 * @param step the orthologs of one alternative of a step (several for a complex)
-	 * @return the coverage the step earns, between 0 and 1
-	 */
-	public abstract double coverage(List<Ortholog> step);
 
 	/**
 	 * @return the name used on the command line, e.g. any

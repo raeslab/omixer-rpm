@@ -39,8 +39,7 @@ public abstract class ModuleAbundanceMaximizer extends ModuleAbundanceCoverageOp
 	protected PathwaySummary computePathScoreAndCoverage(List<List<Ortholog>> path) {
 
 		double pathLength = path.size();
-		// coverage earned by the steps, according to the complex rule
-		double coveredSteps = 0;
+		// the observed steps, according to the complex rule
 		double observedSteps = 0;
 		double pathCount = 0;
 
@@ -53,8 +52,7 @@ public abstract class ModuleAbundanceMaximizer extends ModuleAbundanceCoverageOp
 			for (int j = 0; j < stepSize; j++) {
 				stepCount += step.get(j).getCount();
 			}
-			coveredSteps += complexRule.coverage(step);
-			// only an observed step contributes abundance
+			// only an observed step earns coverage and contributes abundance
 			if (complexRule.isObserved(step)) {
 				pathCount += (stepCount / stepSize);
 				observedSteps++;
@@ -65,7 +63,7 @@ public abstract class ModuleAbundanceMaximizer extends ModuleAbundanceCoverageOp
 		
 		// no observed step with an observed-steps normalizer: abundance 0 instead of 0 / 0 = NaN
 		double pathScore = normalizer == 0 ? 0 : pathCount / normalizer;
-		double coverage = coveredSteps / pathLength;
+		double coverage = observedSteps / pathLength;
 		return new PathwaySummary(path, coverage, pathScore);
 	}
 }

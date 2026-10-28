@@ -41,7 +41,7 @@ class ComplexRuleScoringSpec extends Specification {
 				.getModules().find { it.getModuleId() == module }
 	}
 
-	def "a partial complex: covered with any, not covered and no abundance with all, partial credit with fraction"() {
+	def "a partial complex: covered with any, not covered and no abundance with all"() {
 
 		when:
 		Module result = score(module, PARTIAL, estimator, rule)
@@ -60,10 +60,6 @@ class ComplexRuleScoringSpec extends Specification {
 		"E003" | ComplexRule.ALL      | AVERAGE   | 4d    | 0.5d
 		"E003" | ComplexRule.ALL      | SUM       | 4d    | 0.5d
 		"E003" | ComplexRule.ALL      | MIN       | 4d    | 0.5d
-		"E003" | ComplexRule.FRACTION | MEDIAN    | 4d    | 0.75d
-		"E003" | ComplexRule.FRACTION | AVERAGE   | 4d    | 0.75d
-		"E003" | ComplexRule.FRACTION | SUM       | 8d    | 0.75d
-		"E003" | ComplexRule.FRACTION | MIN       | 4d    | 0.75d
 		"E011" | ComplexRule.ANY      | MEDIAN    | 4d    | 1d
 		"E011" | ComplexRule.ANY      | AVERAGE   | 4d    | 1d
 		"E011" | ComplexRule.ANY      | SUM       | 8d    | 1d
@@ -72,10 +68,6 @@ class ComplexRuleScoringSpec extends Specification {
 		"E011" | ComplexRule.ALL      | AVERAGE   | 6d    | 0.5d
 		"E011" | ComplexRule.ALL      | SUM       | 6d    | 0.5d
 		"E011" | ComplexRule.ALL      | MIN       | 6d    | 0.5d
-		"E011" | ComplexRule.FRACTION | MEDIAN    | 4d    | 2d / 3d
-		"E011" | ComplexRule.FRACTION | AVERAGE   | 4d    | 2d / 3d
-		"E011" | ComplexRule.FRACTION | SUM       | 8d    | 2d / 3d
-		"E011" | ComplexRule.FRACTION | MIN       | 6d    | 2d / 3d
 	}
 
 	def "with all and -n, a partial complex counts as an unobserved step"() {

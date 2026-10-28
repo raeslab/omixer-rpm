@@ -36,7 +36,7 @@ public class ModuleAbundanceCoverageMedianMaximizer extends ModuleAbundanceCover
 	protected PathwaySummary computePathScoreAndCoverage(List<List<Ortholog>> path) {
 
 		double pathLength = path.size();
-		// coverage earned by the steps, according to the complex rule
+		// the observed steps, according to the complex rule
 		double coveredSteps = 0;
 		List<Double> observedValues = new ArrayList<Double>();
 		
@@ -49,9 +49,9 @@ public class ModuleAbundanceCoverageMedianMaximizer extends ModuleAbundanceCover
 			for (int j = 0; j < stepSize; j++) {
 				stepCount += step.get(j).getCount();
 			}
-			coveredSteps += complexRule.coverage(step);
 			// Step is observed
 			if (complexRule.isObserved(step)) {
+				coveredSteps++;
 				// divide observed value by step size to have the mean for complex steps
 				observedValues.add(stepCount / stepSize);
 			} else if (isNormalizeByLength()){

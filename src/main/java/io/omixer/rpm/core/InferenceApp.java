@@ -78,8 +78,7 @@ public class InferenceApp extends AbstractInferenceApp {
 		options.addOption(Option.builder().longOpt("complex-rule")
 				.desc("How a complex step (subunits written K1,K2 in the module database) counts when only some subunits are observed.\n"
 						+ "any: observed when at least one subunit is, since a missing subunit is more often unsampled than absent;\n"
-						+ "all: observed only when every subunit is (otherwise no coverage and no abundance);\n"
-						+ "fraction: like any, but earns coverage in proportion to its observed subunits.\n"
+						+ "all: observed only when every subunit is (otherwise no coverage and no abundance).\n"
 						+ "Accepted values are [" + COMPLEX_RULES + "].\nDefaults to any")
 				.hasArg().argName("RULE").build());
 
@@ -98,7 +97,7 @@ public class InferenceApp extends AbstractInferenceApp {
 				.argName("FILE").build());
 
 		options.addOption(Option.builder("a").longOpt("annotation")
-				.desc("Input file annotation.\nUse 1 for orthologs only files, 2 for taxonomic annotation followed by orthologs or h2 for Humann2 files.\nDefaults to 1")
+				.desc("Input file annotation.\nUse 1 for orthologs only files or 2 for taxonomic annotation followed by orthologs.\nDefaults to 1")
 				.hasArg().argName("ANNOTATION").build());
 
 		options.addOption(Option.builder("e").longOpt("export-format")
@@ -141,7 +140,7 @@ public class InferenceApp extends AbstractInferenceApp {
 		Set<String> formatValues = new HashSet<>();
 		formatValues.add("1");
 		formatValues.add("2");
-		formatValues.add("h2");
+		// h2 (HUMAnN2) is not offered until the HUMAnN 3/4 rework, see BUGS.md B08, B09, B14
 
 		HelpFormatter formatter = new HelpFormatter();
 		formatter.setWidth(800);
