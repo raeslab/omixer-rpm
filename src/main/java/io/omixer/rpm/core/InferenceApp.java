@@ -340,7 +340,7 @@ public class InferenceApp extends AbstractInferenceApp {
 			if (outFormat.equals("1")) {
 				for (Entry<String, Modules> entry : moduleInference.entrySet()) {
 					app.exportModules(outputDir, new File(entry.getKey()), entry.getValue().toAboveCutoffList(),
-							annotation);
+							isPerTaxon);
 				}
 				// export as Matrix
 			} else if (outFormat.equals("2")) {

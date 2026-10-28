@@ -49,19 +49,14 @@ public abstract class AbstractInferenceApp {
 		return options;
 	}
 
-	protected void exportModules(File outputDir, File input, Iterable<Module> modules, String format)
+	/**
+	 * Writes the modules of one sample to &lt;input name&gt;.modules, with a taxon column when the results are per taxon
+	 */
+	protected void exportModules(File outputDir, File input, Iterable<Module> modules, boolean perTaxon)
 			throws IOException {
 
-		String header = null;
-		Function<Module, String> writer = null;
-
-		if (format.equals("1")) {
-			header = MODULE_FILE_HEADER;
-			writer = MODULE_FILE_WRITER;
-		} else if (format.equals("2") || format.equals("h2")) {
-			header = MODULE_TAXON_FILE_HEADER;
-			writer = TAXON_MODULE_FILE_WRITER;
-		}
+		String header = perTaxon ? MODULE_TAXON_FILE_HEADER : MODULE_FILE_HEADER;
+		Function<Module, String> writer = perTaxon ? TAXON_MODULE_FILE_WRITER : MODULE_FILE_WRITER;
 
 		FileUtils.writeObjects(new File(outputDir, input.getName() + ".modules"), header, modules, writer);
 	}

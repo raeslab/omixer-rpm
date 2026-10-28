@@ -1,0 +1,10 @@
+Species	KO	chimera	split_steps	same_ko_all_taxa	all_zero
+T1	K90001	10	0	0	0
+T1	K90002	15	0	0	0
+T1	K90003	9	0	0	0
+T1	K90004	0	6	0	0
+T1	K90017	0	0	1	0
+T2	K90006	0	6	0	0
+T2	K90014	2	0	0	0
+T2	K90017	0	0	2	0
+T3	K90017	0	3	3	0

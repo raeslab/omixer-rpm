@@ -35,10 +35,46 @@ dependencies {
 	testImplementation 'org.spockframework:spock-core'
 	testRuntimeOnly platform('org.junit:junit-bom:5.14.4')
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	// the golden tests capture log messages with a Log4j appender
+	testImplementation 'org.apache.logging.log4j:log4j-core:2.26.1'
 }
 
 test {
-	useJUnitPlatform()
+	useJUnitPlatform {
+		excludeTags 'golden'
+	}
+}
+
+// Golden tests (GoldenSpec): the command line on every case against src/test/resources/golden/expected
+tasks.register('goldenTest', Test) {
+	description = 'Compares the command line outputs with the recorded golden outputs.'
+	group = 'verification'
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	useJUnitPlatform {
+		includeTags 'golden'
+	}
+	// print which files differ
+	testLogging {
+		exceptionFormat = 'full'
+	}
+	shouldRunAfter test
+}
+
+tasks.register('goldenRecord', Test) {
+	description = 'Rewrites the recorded golden outputs with the current code.'
+	group = 'verification'
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	useJUnitPlatform {
+		includeTags 'golden'
+	}
+	systemProperty 'golden.record', 'true'
+	outputs.upToDateWhen { false }
+}
+
+tasks.named('check') {
+	dependsOn 'goldenTest'
 }
 
 jar {

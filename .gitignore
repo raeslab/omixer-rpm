@@ -7,4 +7,4 @@
 /gradlew
 /gradlew.bat
 /.settings/
-/src/test/resources/golden/
+/src/test/resources/golden/reference/

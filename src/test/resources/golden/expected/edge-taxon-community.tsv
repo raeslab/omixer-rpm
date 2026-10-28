@@ -1,0 +1,9 @@
+# automatic coverage cutoff: 1.0
+sample	module	coverage	coverage_all	median	xd_median	all_median
+chimera	E001	1.0	1.0	10.0	5.0	10.0
+chimera	E005	1.0	1.0	8.5	3.5	8.5
+chimera	E006	1.0	1.0	9.5	4.75	9.5
+chimera	E009	0.25	0.25	15.0	5.0	15.0
+same_ko_all_taxa	E008	1.0	1.0	6.0	6.0	6.0
+split_steps	E002	1.0	1.0	6.0	6.0	6.0
+split_steps	E008	1.0	1.0	3.0	3.0	3.0
