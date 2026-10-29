@@ -1,0 +1,51 @@
+E001	linear three steps
+K90001
+K90002
+K90003
+///
+E002	alternatives at first step
+K90004	K90005
+K90006
+///
+E003	complex step
+K90007,K90008
+K90009
+///
+E004	complex or single alternative
+K90010,K90011	K90012
+K90013
+///
+E005	shares K90002 with E001
+K90002
+K90014
+///
+E006	nested in E001, no unique KO
+K90001
+K90003
+///
+E007	same KO in two steps
+K90015
+K90016
+K90015
+///
+E008	single step
+K90017
+///
+E009	K90002 shared by three modules, longer
+K90002
+K90018
+K90019
+K90020
+///
+E010	path explosion
+K90021	K90022	K90023
+K90024	K90025	K90026
+K90027	K90028	K90029
+K90030	K90031	K90032
+K90033	K90034	K90035
+K90036	K90037	K90038
+///
+E011	complex with three subunits
+K90040,K90041,K90042
+K90043
+///

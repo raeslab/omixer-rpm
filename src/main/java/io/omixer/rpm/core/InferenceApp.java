@@ -64,7 +64,24 @@ public class InferenceApp extends AbstractInferenceApp {
 
 	public static final String FOOTER = "\nLicensed under an Academic Non-commercial Software License Agreement, https://github.com/raeslab/omixer-rpm/blob/master/LICENSE";
 
+	/** Exit status of a run that stopped on an input or run error */
+	public static final int EXIT_ERROR = 1;
+	/** Exit status of a run that stopped on a command line error */
+	public static final int EXIT_USAGE = 2;
+
 	public static void main(String[] args) {
+		int status = run(args);
+		if (status != 0) {
+			System.exit(status);
+		}
+	}
+
+	/**
+	 * Runs Omixer-RPM on the command line arguments.
+	 * 
+	 * @return the exit status: 0 on success, {@link #EXIT_ERROR} or {@link #EXIT_USAGE}
+	 */
+	public static int run(String[] args) {
 
 		InferenceApp app = new InferenceApp();
 
@@ -150,7 +167,7 @@ public class InferenceApp extends AbstractInferenceApp {
 		formatter.setWidth(800);
 		if (args.length == 0) {
 			formatter.printHelp(EXEC_COMMAND, HEADER, options, FOOTER, true);
-			return;
+			return 0;
 		}
 
 		try {
@@ -160,7 +177,7 @@ public class InferenceApp extends AbstractInferenceApp {
 
 			if (line.hasOption('h')) {
 				formatter.printHelp(EXEC_COMMAND, HEADER, options, FOOTER, true);
-				return;
+				return 0;
 			}
 
 			if (line.hasOption("coverage")) {
@@ -268,7 +285,7 @@ public class InferenceApp extends AbstractInferenceApp {
 		} catch (ParseException | IllegalArgumentException e) {
 			app.log.error(e.getMessage());
 			formatter.printHelp(EXEC_COMMAND, HEADER, options, FOOTER, true);
-			return;
+			return EXIT_USAGE;
 		}
 
 		// Replace by optionparser
@@ -323,7 +340,7 @@ public class InferenceApp extends AbstractInferenceApp {
 			if (outFormat.equals("1")) {
 				for (Entry<String, Modules> entry : moduleInference.entrySet()) {
 					app.exportModules(outputDir, new File(entry.getKey()), entry.getValue().toAboveCutoffList(),
-							annotation);
+							isPerTaxon);
 				}
 				// export as Matrix
 			} else if (outFormat.equals("2")) {
@@ -337,11 +354,12 @@ public class InferenceApp extends AbstractInferenceApp {
 			}
 		} catch (IOException | IncorrectNumberOfEntriesException | OmixerRpmException | DuplicateColumnException e) {
 			app.log.error("Exception while reading input data: " + e.getMessage());
-			return;
+			return EXIT_ERROR;
 		}
 		long time = System.currentTimeMillis() - start;
 		app.log.info("Total run time: " + (time / 1000l));
 		app.log.info("Coverage cutoff: " + (modulesObserved ? coverage : "none (no module observed)"));
 		app.log.info("Output files are in " + outputDir.getAbsolutePath());
+		return 0;
 	}
 }
