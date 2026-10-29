@@ -4,13 +4,18 @@ plugins {
 }
 
 group = "io.omixer"
-version = '1.2.1'
+version = '2.0.0-SNAPSHOT'
 
 // Minimum Java version for users; compiles and runs the tests on this JDK
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
+		languageVersion = JavaLanguageVersion.of(21)
 	}
+}
+
+// Benchmark gate (src/benchmark): plain Java, not part of the jar
+sourceSets {
+	benchmark
 }
 
 repositories {
@@ -83,4 +88,26 @@ jar {
 		// read back by the help banner
 		attributes 'Implementation-Version': project.version
 	}
+}
+
+// Benchmark gate: the current jar against a baseline jar on generated inputs (speed, heap, matrices); see REFACTORING.md
+tasks.register('benchmark', JavaExec) {
+	description = 'Compares the speed, heap and matrices of the current jar with a baseline jar.'
+	group = 'verification'
+	classpath = sourceSets.benchmark.runtimeClasspath
+	mainClass = 'io.omixer.rpm.benchmark.Benchmark'
+	def currentJar = tasks.named('shadowJar').flatMap { it.archiveFile }
+	def baselineJar = providers.gradleProperty('benchmark.baseline').map { file(it) }
+		.orElse(layout.buildDirectory.file('benchmark/omixer-rpm-1.2-all.jar').map { it.asFile })
+	def workDir = layout.buildDirectory.dir('benchmark')
+	inputs.file(currentJar)
+	argumentProviders.add({ [
+		currentJar.get().asFile.path,
+		baselineJar.get().path,
+		'https://github.com/raeslab/omixer-rpm/releases/download/v1.2.0/omixer-rpm-1.2-all.jar',
+		workDir.get().asFile.path,
+		file('src/test/resources/golden/inputs/synthetic').path,
+		file('src/test/resources/module.list').path
+	] } as CommandLineArgumentProvider)
+	outputs.upToDateWhen { false }
 }

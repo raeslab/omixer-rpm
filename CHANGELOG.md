@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased (2.0.0)
+
+### Requirements
+- **Java 21 or newer** (1.2: Java 17).
+
+### Fixed
+- **B26** `-e 1` with `--ignore-taxonomic-info` on a taxon input (`-a 2`) writes the `Module Value Coverage` layout.
+  Before, the files had a `Taxon` column holding the text `null`. Values are unchanged.
+
 ## 1.2.1 (2026-10-28)
 
 ### Fixed
