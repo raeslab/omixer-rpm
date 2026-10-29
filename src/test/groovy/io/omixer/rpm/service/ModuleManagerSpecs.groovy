@@ -8,7 +8,8 @@ import io.omixer.rpm.model.BasicFeature;
 import io.omixer.rpm.model.Module;
 import io.omixer.rpm.model.ModuleInferenceOptions;
 import io.omixer.rpm.model.Modules;
-import io.omixer.rpm.model.enums.ModuleInferenceOptimizers;
+import io.omixer.rpm.scoring.Estimator
+import io.omixer.rpm.engine.CompiledDatabase
 import io.omixer.rpm.io.ModuleDatabaseReader
 import io.omixer.rpm.service.impl.ModuleManagerImpl;
 import io.omixer.utils.Constants;
@@ -18,12 +19,12 @@ import spock.lang.Specification
 public class ModuleManagerSpecs extends Specification {
 
 	def manager
-	def referenceModules
+	def database
 	def options
 	
 	def setup() {
 		manager = new ModuleManagerImpl()
-		referenceModules = Module.fromDatabase(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list")))
+		database = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list")))
 		options = new ModuleInferenceOptions()
 		options.setCoverage(0.66)
 		options.setNormalizeByLength(false)
@@ -37,8 +38,8 @@ public class ModuleManagerSpecs extends Specification {
 		
 		when:
 		options.setCoverage(0.65)
-		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_MEDIAN_BASED.displayName())
-		Modules modulePrediction = manager.inferModules(orthologs, options, referenceModules)
+		options.setEstimator(new Estimator.Median())
+		Modules modulePrediction = manager.inferModules(orthologs, options, database)
 		List<Module> modules = modulePrediction.toAboveCutoffList()
 		
 		then:
@@ -57,8 +58,8 @@ public class ModuleManagerSpecs extends Specification {
 		
 		when: "A complex step is found (i.e. several orthologs form an enzyme) "
 		options.setNormalizeByLength(true);
-		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_REACTION_BASED.displayName())
-		Modules modulePrediction = manager.inferModules(orthologs, options, referenceModules)
+		options.setEstimator(new Estimator.Average())
+		Modules modulePrediction = manager.inferModules(orthologs, options, database)
 		List<Module> modules = modulePrediction.toAboveCutoffList()
 		
 		then: "its abudance is divided by it orthologs counts"
@@ -72,11 +73,11 @@ public class ModuleManagerSpecs extends Specification {
 		
 		setup:
 		options.setNormalizeByLength(true)
-		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_REACTION_BASED.displayName())
+		options.setEstimator(new Estimator.Average())
 				
 		when: "Every step of MF0003 has a KO"
 		List<BasicFeature> orthologs = [["K00005", 2d], ["K00010", 8d], ["K00011", 2d]].collect{new BasicFeature(null, it[0], it[1])}
-		Modules modulePrediction = manager.inferModules(orthologs, options, referenceModules);						
+		Modules modulePrediction = manager.inferModules(orthologs, options, database);						
 		List<Module> modules = modulePrediction.toAboveCutoffList();
 
 		then: "MF0003 has 100% coverage"
@@ -87,7 +88,7 @@ public class ModuleManagerSpecs extends Specification {
 		
 		when: "2/3 of a module"
 		orthologs = [["K00004", 8d], ["K00005", 8d], ["K00011", 8d]].collect{new BasicFeature(null, it[0], it[1])}
-		modulePrediction = manager.inferModules(orthologs, options, referenceModules);
+		modulePrediction = manager.inferModules(orthologs, options, database);
 		modules = modulePrediction.toAboveCutoffList();
 		
 		then: "coverage is 2/3"
@@ -97,7 +98,7 @@ public class ModuleManagerSpecs extends Specification {
 		
 		when: "A one step module is matched"
 		orthologs = [new BasicFeature(null, "K00012", 8d)]
-		modulePrediction = manager.inferModules(orthologs, options, referenceModules);
+		modulePrediction = manager.inferModules(orthologs, options, database);
 		modules = modulePrediction.toAboveCutoffList();
 		
 		then: "Only MF0004 is selected"
@@ -114,7 +115,7 @@ public class ModuleManagerSpecs extends Specification {
 		when:
 		options.setNormalizeByLength(false);
 		orthologs = [["K00004", 8d], ["K00005", 8d], ["K00011", 8d]].collect{new BasicFeature(null, it[0], it[1])}
-		modulePrediction = manager.inferModules(orthologs, options, referenceModules);
+		modulePrediction = manager.inferModules(orthologs, options, database);
 		modules = modulePrediction.toAboveCutoffList();
 		
 		then: ""
@@ -129,11 +130,11 @@ public class ModuleManagerSpecs extends Specification {
 		setup:
 		List<BasicFeature> orthologs
 		options.setNormalizeByLength(true)
-		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_MEDIAN_BASED.displayName())
+		options.setEstimator(new Estimator.Median())
 		
 		when: "A one step module is matched"
 		orthologs = [new BasicFeature(null, "K00012", 8d)]
-		Modules modulePrediction = manager.inferModules(orthologs, options, referenceModules);
+		Modules modulePrediction = manager.inferModules(orthologs, options, database);
 		List<Module> modules = modulePrediction.toAboveCutoffList();
 		
 		then: "Only MF0004 is selected"
@@ -149,7 +150,7 @@ public class ModuleManagerSpecs extends Specification {
 		
 		when: "Every step of MF0003 has a KO"
 		orthologs = [["K00005", 2d], ["K00010", 8d], ["K00011", 10d]].collect{new BasicFeature(null, it[0], it[1])}
-		modulePrediction = manager.inferModules(orthologs, options, referenceModules);
+		modulePrediction = manager.inferModules(orthologs, options, database);
 		modules = modulePrediction.toAboveCutoffList();
 		
 		then: "MF0003 is selected"
@@ -169,11 +170,11 @@ public class ModuleManagerSpecs extends Specification {
 		setup:
 		List<BasicFeature> orthologs
 		options.setNormalizeByLength(false)
-		options.setAlgorithm(ModuleInferenceOptimizers.SUM.displayName())
+		options.setEstimator(new Estimator.Sum())
 		
 		when: "A one step module is matched"
 		orthologs = [new BasicFeature(null, "K00012", 8d)]
-		Modules modulePrediction = manager.inferModules(orthologs, options, referenceModules);
+		Modules modulePrediction = manager.inferModules(orthologs, options, database);
 		List<Module> modules = modulePrediction.toAboveCutoffList();
 		
 		then: "Only MF0004 is selected"
@@ -189,7 +190,7 @@ public class ModuleManagerSpecs extends Specification {
 		
 		when: "Every step of MF0003 has a KO"
 		orthologs = [["K00005", 2d], ["K00010", 8d], ["K00011", 10d]].collect{new BasicFeature(null, it[0], it[1])}
-		modulePrediction = manager.inferModules(orthologs, options, referenceModules);
+		modulePrediction = manager.inferModules(orthologs, options, database);
 		modules = modulePrediction.toAboveCutoffList();
 		
 		then: "MF0003 is selected"
@@ -208,11 +209,11 @@ public class ModuleManagerSpecs extends Specification {
 		setup:
 		List<BasicFeature> orthologs
 		options.setNormalizeByLength(false)
-		options.setAlgorithm(ModuleInferenceOptimizers.MIN.displayName())
+		options.setEstimator(new Estimator.Min())
 		
 		when: "A one step module is matched"
 		orthologs = [new BasicFeature(null, "K00012", 8d)]
-		Modules modulePrediction = manager.inferModules(orthologs, options, referenceModules);
+		Modules modulePrediction = manager.inferModules(orthologs, options, database);
 		List<Module> modules = modulePrediction.toAboveCutoffList();
 		
 		then: "Only MF0004 is selected"
@@ -228,7 +229,7 @@ public class ModuleManagerSpecs extends Specification {
 		
 		when: "Every step of MF0003 has a KO"
 		orthologs = [["K00005", 2d], ["K00010", 8d], ["K00011", 10d]].collect{new BasicFeature(null, it[0], it[1])}
-		modulePrediction = manager.inferModules(orthologs, options, referenceModules);
+		modulePrediction = manager.inferModules(orthologs, options, database);
 		modules = modulePrediction.toAboveCutoffList();
 		
 		then: "MF0003 is selected"
@@ -246,12 +247,12 @@ public class ModuleManagerSpecs extends Specification {
 		
 		setup:
 		List<BasicFeature> orthologs = [["K00013", 2d], ["K00014", 3d], ["K00015", 8d]].collect{new BasicFeature(null, it[0], it[1])}
-		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_MEDIAN_BASED.displayName())
+		options.setEstimator(new Estimator.Median())
 		options.setCoverage(0.33d)
 		
 		when: "Normalize by length is ON or OFF"
 		options.setNormalizeByLength(normalizeByLength)
-		Modules modulePrediction = manager.inferModules(orthologs, options, referenceModules)
+		Modules modulePrediction = manager.inferModules(orthologs, options, database)
 		List<Module> modules = modulePrediction.toAboveCutoffList()
 
 		then: "A diffrent value for count is returned"
@@ -268,10 +269,10 @@ public class ModuleManagerSpecs extends Specification {
 	def "inferModules from matrix and NormalizeByLength is true"(){
 		
 		when: "modules are inferred from a matrix"
-		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_REACTION_BASED.displayName())
+		options.setEstimator(new Estimator.Average())
 		options.setNormalizeByLength(true)
 		manager.setInputFormat("1")
-		Map<String, Modules> inference = manager.inferModules(new File("src/test/resources/matrix.tsv"), options, referenceModules)
+		Map<String, Modules> inference = manager.inferModules(new File("src/test/resources/matrix.tsv"), options, database)
 
 		then:
 		inference.size() == 2
@@ -301,10 +302,10 @@ public class ModuleManagerSpecs extends Specification {
 	def "inferModules from matrix and NormalizeByLength is false"(){
 		
 		when: "modules are inferred from a matrix"
-		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_REACTION_BASED.displayName())
+		options.setEstimator(new Estimator.Average())
 		options.setNormalizeByLength(false)
 		manager.setInputFormat("1")
-		Map<String, Modules> inference = manager.inferModules(new File("src/test/resources/matrix.tsv"), options, referenceModules)
+		Map<String, Modules> inference = manager.inferModules(new File("src/test/resources/matrix.tsv"), options, database)
 		def inferenceS2 = inference.get("S2").toAboveCutoffList().groupBy{ it.getModuleId() }
 
 		then: 	
@@ -330,12 +331,12 @@ public class ModuleManagerSpecs extends Specification {
 		
 		setup:
 		manager.setInputFormat("2")
-		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_REACTION_BASED.displayName())
+		options.setEstimator(new Estimator.Average())
 		options.setNormalizeByLength(true)
 		options.setPerTaxon(true)
 				
 		when: "A matrix wih species annotation and a 2 samples"
-		Map<String, Modules> inference = manager.inferModules(new File("src/test/resources/taxon_matrix.tsv"), options, referenceModules)
+		Map<String, Modules> inference = manager.inferModules(new File("src/test/resources/taxon_matrix.tsv"), options, database)
 		
 		then: "There is an inference for each sample"
 		inference.size() == 2
@@ -366,10 +367,10 @@ public class ModuleManagerSpecs extends Specification {
 		
 		when: "a directory with 2 input files is input"
 		manager.setInputFormat("1")
-		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_REACTION_BASED.displayName())
+		options.setEstimator(new Estimator.Average())
 		options.setNormalizeByLength(true)
 				
-		Map<String, Modules> inference = manager.inferModules(new File("src/test/resources/input_directory/"), options, referenceModules)
+		Map<String, Modules> inference = manager.inferModules(new File("src/test/resources/input_directory/"), options, database)
 
 		then:"expect 2 samples to be returned"
 		inference.size() == 2
@@ -394,18 +395,19 @@ public class ModuleManagerSpecs extends Specification {
 		"MF0003" | 12d/3d | 1
 	}
 
-	def "withDistributedOrthologAbundance distributes KO abundances"() throws IOException {
+	def "inferModules with distributed ortholog abundance divides shared KOs"() throws IOException {
 
 		setup:
 		List<BasicFeature> orthologs = [new BasicFeature(null, "K00001", 2d), new BasicFeature(null, "K00002", 2d)]
 		
 		when:
 		ModuleInferenceOptions options = new ModuleInferenceOptions();
-		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_REACTION_BASED.displayName());
+		options.setEstimator(new Estimator.Average());
 		options.setCoverage(0.66);
 		options.setNormalizeByLength(true);
 		options.setPromiscuousity(0);
-		Modules modulePrediction = manager.inferModulesWithDistributedOrthologAbundance(orthologs, options, referenceModules);
+		options.setDistributeOrhologAbundance(true);
+		Modules modulePrediction = manager.inferModules(orthologs, options, database);
 		List<Module> modules = modulePrediction.toAboveCutoffList();
 		
 		then: "One module is matched"
@@ -422,9 +424,9 @@ public class ModuleManagerSpecs extends Specification {
 		List<BasicFeature> orthologs = [["K01220", 2d], ["K01819", 4d], ["K00917", 2d]].collect{ new BasicFeature(null, it[0], it[1]) }
 		
 		when: "Above 50% no ties in coverage"
-		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_MEDIAN_BASED.displayName());
+		options.setEstimator(new Estimator.Median());
 		options.setCoverage(0.55);
-		Modules modulePrediction = manager.inferModules(orthologs, options, referenceModules);
+		Modules modulePrediction = manager.inferModules(orthologs, options, database);
 		List<Module> modules = modulePrediction.toAboveCutoffList();
 		
 		then:
@@ -437,7 +439,7 @@ public class ModuleManagerSpecs extends Specification {
 		when: "Above 50% with ties in coverage"
 		orthologs.add(new BasicFeature(null, "K08302", 2d))
 		orthologs.add(new BasicFeature(null, "K01635", 5d))
-		modulePrediction = manager.inferModules(orthologs, options, referenceModules);
+		modulePrediction = manager.inferModules(orthologs, options, database);
 		modules = modulePrediction.toAboveCutoffList();
 		
 		
@@ -450,7 +452,7 @@ public class ModuleManagerSpecs extends Specification {
 		
 		when: "A third of the complex part included"
 		orthologs.add(new BasicFeature(null, "K02788", 1d))
-		modulePrediction = manager.inferModules(orthologs, options, referenceModules);
+		modulePrediction = manager.inferModules(orthologs, options, database);
 		modules = modulePrediction.toAboveCutoffList();
 		
 		then:
@@ -463,7 +465,7 @@ public class ModuleManagerSpecs extends Specification {
 		when: "all the complex part included"
 		orthologs.add(new BasicFeature(null, "K02787", 5d))
 		orthologs.add(new BasicFeature(null, "K02786", 9d))
-		modulePrediction = manager.inferModules(orthologs, options, referenceModules);
+		modulePrediction = manager.inferModules(orthologs, options, database);
 		modules = modulePrediction.toAboveCutoffList();
 		
 		then: 
@@ -475,7 +477,7 @@ public class ModuleManagerSpecs extends Specification {
 		when:"Lower than 50% coverage"
 		options.setCoverage(0.30);
 		orthologs = [new BasicFeature(null, "K01819", 4d), new BasicFeature(null, "K08302", 2d)]
-		modulePrediction = manager.inferModules(orthologs, options, referenceModules);
+		modulePrediction = manager.inferModules(orthologs, options, database);
 		modules = modulePrediction.toAboveCutoffList();
 		
 		then : "Above 30% no ties in coverage"
@@ -486,7 +488,7 @@ public class ModuleManagerSpecs extends Specification {
 		
 		when: "Above 30% with ties in coverage"
 		orthologs.add(new BasicFeature(null, "K01635", 4d));
-		modulePrediction = manager.inferModules(orthologs, options, referenceModules);
+		modulePrediction = manager.inferModules(orthologs, options, database);
 		modules = modulePrediction.toAboveCutoffList();
 
 		then: 

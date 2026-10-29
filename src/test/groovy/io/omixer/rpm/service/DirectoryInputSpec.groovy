@@ -4,11 +4,11 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 import io.omixer.rpm.model.ModuleInferenceOptions
-import io.omixer.rpm.model.enums.ModuleInferenceOptimizers
+import io.omixer.rpm.scoring.Estimator
 import io.omixer.rpm.exceptions.DuplicateSampleNameException
 import io.omixer.rpm.exceptions.InputFormatException
+import io.omixer.rpm.engine.CompiledDatabase
 import io.omixer.rpm.io.ModuleDatabaseReader
-import io.omixer.rpm.model.Module
 import io.omixer.rpm.service.impl.ModuleManagerImpl
 
 import spock.lang.Specification
@@ -24,15 +24,15 @@ class DirectoryInputSpec extends Specification {
 	Path dir
 
 	def manager
-	def referenceModules
+	def database
 	def options
 
 	def setup() {
 		manager = new ModuleManagerImpl()
 		manager.setInputFormat("1")
-		referenceModules = Module.fromDatabase(ModuleDatabaseReader.read(Path.of("src/test/resources/module.list")))
+		database = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module.list")))
 		options = new ModuleInferenceOptions()
-		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_MEDIAN_BASED.displayName())
+		options.setEstimator(new Estimator.Median())
 		options.setCoverage(0d)
 		["S1", "S2"].each { Files.copy(Path.of("src/test/resources/input_directory", it), dir.resolve(it)) }
 	}
@@ -43,7 +43,7 @@ class DirectoryInputSpec extends Specification {
 		dir.resolve(name).toFile().bytes = content
 
 		when:
-		def inference = manager.inferModules(dir.toFile(), options, referenceModules)
+		def inference = manager.inferModules(dir.toFile(), options, database)
 
 		then: "only S1 and S2; a valid hidden file used to become a sample with an empty name"
 		inference.keySet() == ["S1", "S2"] as Set
@@ -60,7 +60,7 @@ class DirectoryInputSpec extends Specification {
 		Files.createDirectory(dir.resolve("subdir"))
 
 		when:
-		def inference = manager.inferModules(dir.toFile(), options, referenceModules)
+		def inference = manager.inferModules(dir.toFile(), options, database)
 
 		then:
 		inference.keySet() == ["S1", "S2"] as Set
@@ -72,7 +72,7 @@ class DirectoryInputSpec extends Specification {
 		dir.resolve("notes.txt").toFile().text = "these are not abundances\n"
 
 		when:
-		manager.inferModules(dir.toFile(), options, referenceModules)
+		manager.inferModules(dir.toFile(), options, database)
 
 		then: "not skipped silently: a misformatted sample must not disappear from the results"
 		InputFormatException e = thrown()
@@ -85,7 +85,7 @@ class DirectoryInputSpec extends Specification {
 		["run.v2.tsv", "run.v3.tsv"].each { Files.copy(dir.resolve("S1"), dir.resolve(it)) }
 
 		when:
-		def inference = manager.inferModules(dir.toFile(), options, referenceModules)
+		def inference = manager.inferModules(dir.toFile(), options, database)
 
 		then: "before, everything after the first dot was dropped and both files became sample 'run'"
 		inference.keySet() == ["S1", "S2", "run.v2", "run.v3"] as Set
@@ -97,7 +97,7 @@ class DirectoryInputSpec extends Specification {
 		["S3.a", "S3.b"].each { Files.copy(dir.resolve("S1"), dir.resolve(it)) }
 
 		when:
-		manager.inferModules(dir.toFile(), options, referenceModules)
+		manager.inferModules(dir.toFile(), options, database)
 
 		then: "before, one of the two files was silently lost"
 		DuplicateSampleNameException e = thrown()

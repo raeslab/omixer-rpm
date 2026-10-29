@@ -13,7 +13,7 @@ class ModuleMatrixWriterSpec extends Specification {
 		List<String> modules = ["MF0012", "MF0003", "MF0101", "MF0040", "MF0007"]
 		Map<String, Modules> moduleInference = new LinkedHashMap<>()
 		["S3", "S1", "Z9", "S10", "A2"].eachWithIndex { sample, i ->
-			moduleInference[sample] = new Modules(modules.collect { new Module(it, null, 1d, i, null) }, 0d)
+			moduleInference[sample] = new Modules(modules.collect { new Module(it, null, 1d, i) }, 0d)
 		}
 
 		when:

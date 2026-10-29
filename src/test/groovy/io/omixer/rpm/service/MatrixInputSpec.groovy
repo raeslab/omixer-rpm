@@ -4,9 +4,9 @@ import java.nio.file.Path
 
 import io.omixer.rpm.exceptions.InputFormatException
 import io.omixer.rpm.model.ModuleInferenceOptions
-import io.omixer.rpm.model.enums.ModuleInferenceOptimizers
+import io.omixer.rpm.scoring.Estimator
+import io.omixer.rpm.engine.CompiledDatabase
 import io.omixer.rpm.io.ModuleDatabaseReader
-import io.omixer.rpm.model.Module
 import io.omixer.rpm.service.impl.ModuleManagerImpl
 import io.omixer.utils.exceptions.DuplicateColumnException
 
@@ -27,13 +27,13 @@ class MatrixInputSpec extends Specification {
 		def manager = new ModuleManagerImpl()
 		manager.setInputFormat("1")
 		def options = new ModuleInferenceOptions()
-		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_MEDIAN_BASED.displayName())
+		options.setEstimator(new Estimator.Median())
 		File matrix = tmp.resolve("matrix.tsv").toFile()
 		matrix.text = "entry\tS1\tS2\tS1\nK00001\t1\t2\t3\n"
 
 		when:
 		manager.inferModules(matrix, options,
-				Module.fromDatabase(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list"))))
+				CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list"))))
 
 		then: "before, the values of both S1 columns were silently added together"
 		DuplicateColumnException e = thrown()
@@ -47,13 +47,13 @@ class MatrixInputSpec extends Specification {
 		def manager = new ModuleManagerImpl()
 		manager.setInputFormat(annotation)
 		def options = new ModuleInferenceOptions()
-		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_MEDIAN_BASED.displayName())
+		options.setEstimator(new Estimator.Median())
 		File matrix = tmp.resolve(file).toFile()
 		matrix.text = content
 
 		when:
 		manager.inferModules(matrix, options,
-				Module.fromDatabase(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list"))))
+				CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list"))))
 
 		then: "before, a raw NumberFormatException with no file or line"
 		InputFormatException e = thrown()

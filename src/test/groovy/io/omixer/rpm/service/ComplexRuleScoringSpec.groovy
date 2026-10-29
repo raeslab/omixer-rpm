@@ -5,8 +5,9 @@ import java.nio.file.Path
 import io.omixer.rpm.model.BasicFeature
 import io.omixer.rpm.model.Module
 import io.omixer.rpm.model.ModuleInferenceOptions
-import io.omixer.rpm.model.enums.ComplexRule
-import io.omixer.rpm.model.enums.ModuleInferenceOptimizers
+import io.omixer.rpm.scoring.ComplexRule
+import io.omixer.rpm.scoring.Estimator
+import io.omixer.rpm.engine.CompiledDatabase
 import io.omixer.rpm.io.ModuleDatabaseReader
 import io.omixer.rpm.service.impl.ModuleManagerImpl
 
@@ -21,10 +22,10 @@ import spock.lang.Specification
  */
 class ComplexRuleScoringSpec extends Specification {
 
-	static final def MEDIAN = ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_MEDIAN_BASED
-	static final def AVERAGE = ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_REACTION_BASED
-	static final def SUM = ModuleInferenceOptimizers.SUM
-	static final def MIN = ModuleInferenceOptimizers.MIN
+	static final def MEDIAN = new Estimator.Median()
+	static final def AVERAGE = new Estimator.Average()
+	static final def SUM = new Estimator.Sum()
+	static final def MIN = new Estimator.Min()
 
 	/** One subunit of each complex is observed: K90008 = 0; K90041 = K90042 = 0 */
 	static final Map<String, Double> PARTIAL = [K90007: 8d, K90009: 4d, K90040: 6d, K90043: 6d]
@@ -33,11 +34,11 @@ class ComplexRuleScoringSpec extends Specification {
 	private static Module score(String module, Map<String, Double> abundances, def estimator, ComplexRule rule,
 			boolean normalize = false) {
 		def options = new ModuleInferenceOptions()
-		options.setAlgorithm(estimator.displayName())
+		options.setEstimator(estimator)
 		options.setComplexRule(rule)
 		options.setNormalizeByLength(normalize)
 		options.setCoverage(0d)
-		def modules = Module.fromDatabase(ModuleDatabaseReader.read(Path.of("src/test/resources/golden/inputs/edge/edge-modules.list")))
+		def modules = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/golden/inputs/edge/edge-modules.list")))
 		new ModuleManagerImpl()
 				.inferModules(abundances.collect { ko, value -> new BasicFeature(null, ko, value) }, options, modules)
 				.getModules().find { it.getModuleId() == module }

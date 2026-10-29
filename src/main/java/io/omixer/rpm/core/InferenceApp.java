@@ -21,18 +21,18 @@ import org.apache.commons.cli.MissingArgumentException;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import io.omixer.rpm.engine.CompiledDatabase;
 import io.omixer.rpm.exceptions.OmixerRpmException;
 import io.omixer.rpm.io.ModuleDatabaseReader;
-import io.omixer.rpm.model.Module;
 import io.omixer.rpm.model.ModuleCoverageDistribution;
 import io.omixer.rpm.model.ModuleInferenceOptions;
 import io.omixer.rpm.model.Modules;
-import io.omixer.rpm.model.enums.ComplexRule;
-import io.omixer.rpm.model.enums.ModuleInferenceOptimizers;
 import io.omixer.rpm.model.enums.ScalingMethod;
 import io.omixer.rpm.model.io.MatrixWriter;
 import io.omixer.rpm.model.io.ModuleMatrixWriter;
 import io.omixer.rpm.model.io.ModuleTaxonomyMatrixWriter;
+import io.omixer.rpm.scoring.ComplexRule;
+import io.omixer.rpm.scoring.Estimator;
 import io.omixer.rpm.service.impl.ModuleManagerImpl;
 import io.omixer.utils.exceptions.DuplicateColumnException;
 import io.omixer.utils.exceptions.IncorrectNumberOfEntriesException;
@@ -40,7 +40,7 @@ import io.omixer.utils.exceptions.IncorrectNumberOfEntriesException;
 /**
  * A client app to infer modules from command line
  * 
- * @author <a href="mailto:youssef.darzi@gmail.com">Youssef Darzi</a>
+ * @author <a href="mailto:youssef.darzi@omixer.io">Youssef Darzi</a>
  *
  */
 public class InferenceApp extends AbstractInferenceApp {
@@ -52,7 +52,7 @@ public class InferenceApp extends AbstractInferenceApp {
 			"unknown");
 	public static final String HEADER = "\n\nDESCRIPTION\n"
 			+ " Omixer-RPM\n A Reference Pathways Mapper for turning metagenomic functional profiles into pathway/module profiles\n\n"
-			+ "VERSION: " + VERSION + "\n" + "AUTHOR: Youssef Darzi <youssef.darzi@gmail.com>\n\n"
+			+ "VERSION: " + VERSION + "\n" + "AUTHOR: Youssef Darzi <youssef.darzi@omixer.io>\n\n"
 			+ "ARGUMENTS (Options starting with -X are non-standard and subject to change without notice.)\n\n";
 
 	/** Accepted values of --score-estimator, used in the help text and in its error message */
@@ -142,7 +142,7 @@ public class InferenceApp extends AbstractInferenceApp {
 				.build());
 		
 		double coverage = -1d;
-		String algorithm = "ABUNDANCE_COVERAGE_MEDIAN_BASED";
+		Estimator estimator = new Estimator.Median();
 		String annotation = "1";
 		// 1 for files 2 for matrix
 		String outFormat = "1";
@@ -195,16 +195,16 @@ public class InferenceApp extends AbstractInferenceApp {
 				}
 			}
 			if (line.hasOption("score-estimator")) {
-				String estimator = line.getOptionValue("score-estimator");
+				String name = line.getOptionValue("score-estimator");
 
-				if ("average".equals(estimator)) {
-					algorithm = ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_REACTION_BASED.displayName();
-				} else if ("sum".equals(estimator)) {
-					algorithm = ModuleInferenceOptimizers.SUM.displayName();
-				} else if ("min".equals(estimator)) {
-					algorithm = ModuleInferenceOptimizers.MIN.displayName();
-				} else if (!"median".equals(estimator)) {
-					throw new IllegalArgumentException(estimator
+				if ("average".equals(name)) {
+					estimator = new Estimator.Average();
+				} else if ("sum".equals(name)) {
+					estimator = new Estimator.Sum();
+				} else if ("min".equals(name)) {
+					estimator = new Estimator.Min();
+				} else if (!"median".equals(name)) {
+					throw new IllegalArgumentException(name
 							+ " is not a valid score estimator. Please choose one of [" + String.join("|", SCORE_ESTIMATORS) + "]");
 				}
 			}
@@ -296,7 +296,7 @@ public class InferenceApp extends AbstractInferenceApp {
 		}
 		outputDir.mkdirs();
 
-		final ModuleInferenceOptions moduleInferenceOptions = app.makeModuleSetOptions(algorithm, coverage,
+		final ModuleInferenceOptions moduleInferenceOptions = app.makeModuleSetOptions(estimator, coverage,
 				scalingMethod);
 		moduleInferenceOptions.setNormalizeByLength(normalizeByLength);
 		moduleInferenceOptions.setPerTaxon(isPerTaxon);
@@ -306,9 +306,9 @@ public class InferenceApp extends AbstractInferenceApp {
 		// false when no module is observed in any sample, so that no automatic cutoff exists
 		boolean modulesObserved = true;
 		try {
-			final List<Module> referenceModules = Module.fromDatabase(ModuleDatabaseReader.read(moduleFile.toPath()));
+			final CompiledDatabase database = CompiledDatabase.compile(ModuleDatabaseReader.read(moduleFile.toPath()));
 			Map<String, Modules> moduleInference = moduleManager.inferModules(inputdir,
-					moduleInferenceOptions, referenceModules);
+					moduleInferenceOptions, database);
 			// Check if the automatic threshold detection is required
 			if (Double.compare(coverage, -1d) == 0) {
 

@@ -5,7 +5,8 @@ import java.nio.file.Path
 import io.omixer.rpm.model.BasicFeature
 import io.omixer.rpm.model.Module
 import io.omixer.rpm.model.ModuleInferenceOptions
-import io.omixer.rpm.model.enums.ModuleInferenceOptimizers
+import io.omixer.rpm.scoring.Estimator
+import io.omixer.rpm.engine.CompiledDatabase
 import io.omixer.rpm.io.ModuleDatabaseReader
 import io.omixer.rpm.service.impl.ModuleManagerImpl
 
@@ -20,14 +21,14 @@ class UnobservedModuleSpec extends Specification {
 
 		setup: "only K00001 is observed; MF0004 (K00012) has no observed step"
 		def options = new ModuleInferenceOptions()
-		options.setAlgorithm(algorithm.displayName())
+		options.setEstimator(estimator)
 		options.setNormalizeByLength(normalize)
 		options.setCoverage(0d)
-		def referenceModules = Module.fromDatabase(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list")))
+		def database = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list")))
 
 		when:
 		Module module = new ModuleManagerImpl()
-				.inferModules([new BasicFeature(null, "K00001", 2d)], options, referenceModules)
+				.inferModules([new BasicFeature(null, "K00001", 2d)], options, database)
 				.getModules().find { it.getModuleId() == "MF0004" }
 
 		then: "before, median and average (without -n) gave NaN"
@@ -35,8 +36,7 @@ class UnobservedModuleSpec extends Specification {
 		module.getCoverage() == 0d
 
 		where:
-		[algorithm, normalize] << [[ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_MEDIAN_BASED,
-				ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_REACTION_BASED,
-				ModuleInferenceOptimizers.SUM, ModuleInferenceOptimizers.MIN], [false, true]].combinations()
+		[estimator, normalize] << [[new Estimator.Median(), new Estimator.Average(), new Estimator.Sum(),
+				new Estimator.Min()], [false, true]].combinations()
 	}
 }

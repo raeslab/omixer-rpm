@@ -7,8 +7,8 @@ import io.omixer.rpm.model.Module
 import io.omixer.rpm.model.ModuleCoverageDistribution
 import io.omixer.rpm.model.ModuleInferenceOptions
 import io.omixer.rpm.model.Modules
-import io.omixer.rpm.model.Ortholog
-import io.omixer.rpm.model.enums.ModuleInferenceOptimizers
+import io.omixer.rpm.scoring.Estimator
+import io.omixer.rpm.engine.CompiledDatabase
 import io.omixer.rpm.io.ModuleDatabaseReader
 import io.omixer.rpm.service.impl.ModuleManagerImpl
 
@@ -26,14 +26,14 @@ import spock.lang.Specification
 class XDistributeSpec extends Specification {
 
 	def manager
-	def referenceModules
+	def database
 	def options
 
 	def setup() {
 		manager = new ModuleManagerImpl()
-		referenceModules = Module.fromDatabase(ModuleDatabaseReader.read(Path.of("src/test/resources/xdistribute-modules.list")))
+		database = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/xdistribute-modules.list")))
 		options = new ModuleInferenceOptions()
-		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_MEDIAN_BASED.displayName())
+		options.setEstimator(new Estimator.Median())
 		options.setCoverage(0d)
 		options.setNormalizeByLength(false)
 		options.setDistributeOrhologAbundance(true)
@@ -50,8 +50,8 @@ class XDistributeSpec extends Specification {
 	def "a KO repeated inside one module, and used by no other module, is not split"() {
 
 		when:
-		Map<String, Module> result = byId(manager.inferModulesWithDistributedOrthologAbundance(
-				features(null, [K10001: 7d, K10002: 1d]), options, referenceModules))
+		Map<String, Module> result = byId(manager.inferModules(
+				features(null, [K10001: 7d, K10002: 1d]), options, database))
 
 		then: "steps are 7, 1, 7, so the median is 7 (before the fix: K10001 was split against itself and the median was 3.5)"
 		result["X001"].getCount() == 7d
@@ -61,8 +61,8 @@ class XDistributeSpec extends Specification {
 	def "a KO repeated inside one module and used by one other module is split in two, at every occurrence"() {
 
 		when:
-		Map<String, Module> result = byId(manager.inferModulesWithDistributedOrthologAbundance(
-				features(null, [K10010: 8d, K10013: 4d, K10014: 4d, K10015: 4d, K10016: 4d]), options, referenceModules))
+		Map<String, Module> result = byId(manager.inferModules(
+				features(null, [K10010: 8d, K10013: 4d, K10014: 4d, K10015: 4d, K10016: 4d]), options, database))
 
 		then: """K10010 is used by 2 modules (X002, X003), so each gets 8/2 = 4, in both alternatives of X002.
 				X002: step 1 = mean(4, 4) = 4 in either alternative, step 2 = 4 -> 4.
@@ -73,15 +73,16 @@ class XDistributeSpec extends Specification {
 		result["X003"].getCount() == 4d
 	}
 
-	def "every occurrence of a shared KO in the chosen path carries the reduced value"() {
+	def "every occurrence of a shared KO carries the reduced value"() {
 
 		when:
-		Map<String, Module> result = byId(manager.inferModulesWithDistributedOrthologAbundance(
-				features(null, [K10010: 8d, K10013: 4d, K10014: 4d, K10015: 4d, K10016: 4d]), options, referenceModules))
+		Map<String, Module> result = byId(manager.inferModules(
+				features(null, [K10010: 8d, K10013: 4d, K10014: 8d, K10015: 4d]), options, database))
 
-		then:
-		List<Ortholog> chosen = result["X002"].getOrthologs().collectMany { step -> step.flatten() } as List<Ortholog>
-		chosen.findAll { it.getOrthologId() == "K10010" }*.getCount().every { it == 4d }
+		then: """K10010 = 8 / 2 = 4 in both alternatives of X002's first step: mean(4, 4) = 4 and mean(4, 8) = 6, so the
+				step takes 6 and the median of [6, 4] is 5. With an unreduced occurrence that alternative would be
+				mean(8, 8) = 8 and the median 6"""
+		result["X002"].getCount() == 5d
 	}
 
 	def "per-taxon --Xdistribute reports every taxon, each identical to running that taxon alone"() {
@@ -95,41 +96,27 @@ class XDistributeSpec extends Specification {
 
 		when:
 		options.setPerTaxon(true)
-		Modules perTaxon = manager.inferModules(all, options, referenceModules)
+		Modules perTaxon = manager.inferModules(all, options, database)
 
 		then: "every taxon is present (before the fix: only the last taxon was kept)"
 		perTaxon.getModules()*.getTaxon().toSet() == taxa.keySet()
-		perTaxon.getModules().size() == taxa.size() * referenceModules.size()
+		perTaxon.getModules().size() == taxa.size() * database.modules().size()
 
 		and: "each taxon's results equal a separate run on that taxon's data"
 		taxa.every { taxon, abundances ->
 			options.setPerTaxon(false)
 			Map<String, Module> alone = byId(manager.inferModules(features(taxon, abundances), options,
-					Module.fromDatabase(ModuleDatabaseReader.read(Path.of("src/test/resources/xdistribute-modules.list")))))
+					CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/xdistribute-modules.list")))))
 			perTaxon.getModules().findAll { it.getTaxon() == taxon }.every {
 				it.getCount() == alone[it.getModuleId()].getCount() && it.getCoverage() == alone[it.getModuleId()].getCoverage()
 			}
 		}
 	}
 
-	def "The --Xdistribute leaves the reference modules it was given unchanged"() {
-
-		setup:
-		def before = referenceModules.collect { it.getOrthologs().toString() }
-
-		when:
-		manager.inferModulesWithDistributedOrthologAbundance(
-				features(null, [K10010: 8d, K10013: 4d, K10015: 4d, K10016: 4d]), options, referenceModules)
-
-		then: "no alternative was collapsed and no abundance was written into the references"
-		referenceModules.collect { it.getOrthologs().toString() } == before
-		referenceModules.every { m -> m.getFlatOrthologs().every { it.getCount() == 0d } }
-	}
-
 	def "per-taxon --Xdistribute on the legacy taxon matrix reports every taxon and yields an automatic cutoff"() {
 
 		setup:
-		def gmms = Module.fromDatabase(ModuleDatabaseReader.read(Path.of("src/test/resources/module.list")))
+		def gmms = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module.list")))
 		manager.setInputFormat("2")
 		options.setPerTaxon(true)
 

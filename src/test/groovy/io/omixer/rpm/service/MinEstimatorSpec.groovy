@@ -5,7 +5,8 @@ import java.nio.file.Path
 import io.omixer.rpm.model.BasicFeature
 import io.omixer.rpm.model.Module
 import io.omixer.rpm.model.ModuleInferenceOptions
-import io.omixer.rpm.model.enums.ModuleInferenceOptimizers
+import io.omixer.rpm.scoring.Estimator
+import io.omixer.rpm.engine.CompiledDatabase
 import io.omixer.rpm.io.ModuleDatabaseReader
 import io.omixer.rpm.service.impl.ModuleManagerImpl
 
@@ -20,11 +21,11 @@ class MinEstimatorSpec extends Specification {
 
 	private static Module mf0007(Map<String, Double> abundances) {
 		def options = new ModuleInferenceOptions()
-		options.setAlgorithm(ModuleInferenceOptimizers.MIN.displayName())
+		options.setEstimator(new Estimator.Min())
 		options.setCoverage(0d)
-		def referenceModules = Module.fromDatabase(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list")))
+		def database = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list")))
 		new ModuleManagerImpl()
-				.inferModules(abundances.collect { ko, value -> new BasicFeature(null, ko, value) }, options, referenceModules)
+				.inferModules(abundances.collect { ko, value -> new BasicFeature(null, ko, value) }, options, database)
 				.getModules().find { it.getModuleId() == "MF0007" }
 	}
 

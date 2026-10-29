@@ -12,7 +12,7 @@ import io.omixer.utils.readers.FileLine;
  * 
  * id, function, expression0..expressionN
  * 
- * @author <a href="mailto:youssef.darzi@gmail.com">Youssef Darzi</a>
+ * @author <a href="mailto:youssef.darzi@omixer.io">Youssef Darzi</a>
  *
  */
 public class FunctionLineProcessor extends AbstractLineProcessor {

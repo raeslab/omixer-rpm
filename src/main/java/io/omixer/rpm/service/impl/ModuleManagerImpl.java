@@ -9,38 +9,30 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import io.omixer.rpm.engine.CompiledDatabase;
+import io.omixer.rpm.engine.CompiledModule;
 import io.omixer.rpm.exceptions.DuplicateSampleNameException;
 import io.omixer.rpm.exceptions.InputFormatException;
 import io.omixer.rpm.model.BasicFeature;
 import io.omixer.rpm.model.Module;
 import io.omixer.rpm.model.ModuleInferenceOptions;
 import io.omixer.rpm.model.Modules;
-import io.omixer.rpm.model.Ortholog;
-import io.omixer.rpm.model.PathwaySummary;
-import io.omixer.rpm.model.enums.ModuleInferenceOptimizers;
-import io.omixer.rpm.model.optimizers.ModuleAbundanceCoverageAbundanceMinimizer;
-import io.omixer.rpm.model.optimizers.ModuleAbundanceCoverageAbundanceSumMaximizer;
-import io.omixer.rpm.model.optimizers.ModuleAbundanceCoverageMedianMaximizer;
-import io.omixer.rpm.model.optimizers.ModuleAbundanceCoverageOrthologMaximizer;
-import io.omixer.rpm.model.optimizers.ModuleAbundanceCoverageReactionMaximizer;
-import io.omixer.rpm.model.optimizers.ModuleScoreCalculator;
 import io.omixer.rpm.parsers.FunctionLineProcessor;
 import io.omixer.rpm.parsers.FunctionRowMapper;
 import io.omixer.rpm.parsers.TaxonFunctionHumannLineProcessor;
 import io.omixer.rpm.parsers.TaxonFunctionLineProcessor;
 import io.omixer.rpm.parsers.TaxonFunctionRowMapper;
+import io.omixer.rpm.scoring.ModuleScore;
+import io.omixer.rpm.scoring.ModuleScorer;
 import io.omixer.rpm.service.ModuleManager;
 import io.omixer.utils.Constants;
 import io.omixer.utils.exceptions.IncorrectNumberOfEntriesException;
@@ -50,7 +42,7 @@ import io.omixer.utils.utils.FileUtils;
 
 /**
  * 
- * @author <a href="mailto:youssef.darzi@gmail.com">Youssef Darzi</a>
+ * @author <a href="mailto:youssef.darzi@omixer.io">Youssef Darzi</a>
  * 
  */
 public class ModuleManagerImpl implements ModuleManager {
@@ -87,48 +79,55 @@ public class ModuleManagerImpl implements ModuleManager {
 		return orthologAbundanceMap;
 	}
 
-	public Modules inferModules(List<BasicFeature> orthologs, ModuleInferenceOptions options, List<Module> modules) {
-
-		Modules allModules = new Modules();
-		if (options.isPerTaxon()) {
-			// Do inference per Taxon after Mapping on Taxon Id
-			Map<String, List<BasicFeature>> orthologMap = orthologs.stream()
-					.collect(Collectors.groupingBy(BasicFeature::getTaxon));
-			// Get an iterator over taxonomic entries
-			List<String> taxa = new ArrayList<>(orthologMap.keySet());
-			
-			allModules.setCoverageCutoff(options.getCoverage());
-			// iterate over taxa then remove BasicFeature for each taxa after inference
-			for (String taxon : taxa) {
-				Modules taxonMondules = null;
-				if (options.isDistributeOrhologAbundance()) {
-					taxonMondules = inferModulesWithDistributedOrthologAbundance(orthologMap.remove(taxon), options, modules);
-				} else {
-					taxonMondules = inferModulesCore(orthologMap.remove(taxon), options, modules);
-				}
-				
-				for (Module module : taxonMondules.getModules()) {
-					module.setTaxon(taxon);
-				}
-				allModules.addModules(taxonMondules);
-			}
-		} else {
-			// proceed with inference
-			if (options.isDistributeOrhologAbundance()) {
-				allModules = inferModulesWithDistributedOrthologAbundance(orthologs, options, modules);
-			} else {
-				allModules = inferModulesCore(orthologs, options, modules);
-			}
+	public Modules inferModules(List<BasicFeature> orthologs, ModuleInferenceOptions options, CompiledDatabase database) {
+		ModuleScorer scorer = new ModuleScorer(options.getScoringOptions());
+		if (!options.isPerTaxon()) {
+			return score(orthologs, null, options, database, scorer);
 		}
-
+		Modules allModules = new Modules();
+		allModules.setCoverageCutoff(options.getCoverage());
+		// infer per taxon, removing each taxon's features once inferred
+		Map<String, List<BasicFeature>> orthologMap = orthologs.stream()
+				.collect(Collectors.groupingBy(BasicFeature::getTaxon));
+		for (String taxon : new ArrayList<>(orthologMap.keySet())) {
+			allModules.addModules(score(orthologMap.remove(taxon), taxon, options, database, scorer));
+		}
 		return allModules;
 	}
-	
+
+	/** Scores every module of the database in one profile (a sample, or a taxon of a sample) */
+	private Modules score(List<BasicFeature> orthologs, String taxon, ModuleInferenceOptions options,
+			CompiledDatabase database, ModuleScorer scorer) {
+		double[] values = koValues(makeOrthologAbundanceMap(orthologs), database, options.isDistributeOrhologAbundance());
+		List<Module> modules = new ArrayList<>(database.modules().size());
+		for (CompiledModule module : database.modules()) {
+			ModuleScore score = scorer.score(module, values);
+			modules.add(new Module(module.id(), taxon, score.coverage(), score.abundance()));
+		}
+		return new Modules(modules, options.getCoverage());
+	}
+
+	/**
+	 * The profile's value of every KO of the database (0 when absent from the input). With --Xdistribute, a KO used by
+	 * N distinct modules gives each of them its value ÷ N.
+	 */
+	private static double[] koValues(Map<String, Double> abundances, CompiledDatabase database, boolean distribute) {
+		double[] values = new double[database.koCount()];
+		for (int ko = 0; ko < values.length; ko++) {
+			Double value = abundances.get(database.ko(ko));
+			if (value != null) {
+				int modules = database.modulesUsing(ko);
+				values[ko] = distribute && modules > 1 ? value / modules : value;
+			}
+		}
+		return values;
+	}
+
 	/**
 	 * Current possible values for iput format are 1 (orthologs), 2(orthologs+taxa), h2(humann2 matrix)
 	 */
 	public Map<String, Modules> inferModules(File input, ModuleInferenceOptions options,
-			List<Module> referenceModules) throws IncorrectNumberOfEntriesException, IOException {
+			CompiledDatabase database) throws IncorrectNumberOfEntriesException, IOException {
 
 		Map<String, List<BasicFeature>> sampleOrthologs;
 		long start = System.currentTimeMillis();
@@ -159,10 +158,7 @@ public class ModuleManagerImpl implements ModuleManager {
 		// LinkedHashMap keeps the input sample order, also in parallel
 		// TODO check if removal of orthologs here will save memory
 		Map<String, Modules> moduleInference = stream.collect(Collectors.toMap(Entry::getKey,
-				// each sample gets its own copy of the reference modules
-				entry -> inferModules(entry.getValue(), options,
-						referenceModules.stream().map(Module::clone).collect(Collectors.toList())),
-				(first, second) -> first, LinkedHashMap::new));
+				entry -> inferModules(entry.getValue(), options, database), (first, second) -> first, LinkedHashMap::new));
 		log.debug("Inferred modules in " + ((System.currentTimeMillis() - start)/1000));
 		return moduleInference;
 	}
@@ -239,146 +235,5 @@ public class ModuleManagerImpl implements ModuleManager {
 			}
 		}
 		return features;
-	}
-	
-	protected Modules inferModulesCore(List<BasicFeature> orthologs, ModuleInferenceOptions options,
-			List<Module> modules) {
-
-		// mapping of ortholog id to its abundance
-		Map<String, Double> orthologAbundanceMap = makeOrthologAbundanceMap(orthologs);
-		// list of predicted modules
-		List<Module> predictedModules = new ArrayList<Module>();
-        for (Module value : modules) {
-            /*
-             * Clone to avoid keeping only best paths after first inference.
-             * This is important as the methods below will change the module
-             * state
-             */
-            Module module = value.clone();
-            predictedModules.add(module);
-            List<List<List<Ortholog>>> moduleOrthologs = module.getOrthologs();
-            // give counts to orthologs in order to quantify
-            for (List<List<Ortholog>> path : moduleOrthologs) {
-                for (List<Ortholog> step : path) {
-                    for (Ortholog ortholog : step) {
-                        Double count = orthologAbundanceMap.get(ortholog.getOrthologId());
-                        if (count != null) {
-                            ortholog.setCount(count);
-                        } else {
-                            ortholog.setCount(0);
-                        }
-                    }
-                }
-            }
-            optimizeModule(module, options);
-        }
-		return new Modules(predictedModules, options.getCoverage());
-	}
-
-	/**
-	 * When an ortholog is shared by N modules, divide its abundance by N before the actual mapping and quantification.
-	 * 
-	 * @param orthologs
-	 * @param options
-	 * @param modules
-	 * @return
-	 */
-	public Modules inferModulesWithDistributedOrthologAbundance(List<BasicFeature> orthologs, ModuleInferenceOptions options, List<Module> modules) {
-
-		// mapping of ortholog id to its abundance
-		Map<String, Double> orthologAbundanceMap = makeOrthologAbundanceMap(orthologs);
-		/*
-		 * Clone to leave the reference modules untouched, as in inferModulesCore: the methods below
-		 * change the module state, and the same reference modules are reused for every taxon (B01).
-		 */
-		List<Module> predictedModules = modules.stream().map(Module::clone).collect(Collectors.toList());
-		// A map of KO to the distinct Modules it occurs in. Module does not override equals, so the set is
-		// identity-based: a KO repeated inside one module counts that module once (B02)
-		Map<String, Set<Module>> koModules = new HashMap<>();
-		// give counts to orthologs in order to quantify
-		for (Module module : predictedModules) {
-			for (Ortholog ortholog : module.getFlatOrthologs()) {
-				Double count = orthologAbundanceMap.get(ortholog.getOrthologId());
-				if (count != null) {
-					ortholog.setCount(count);
-					// Populate the set of observed modules
-					koModules.computeIfAbsent(ortholog.getOrthologId(), ko -> new LinkedHashSet<>()).add(module);
-				} else {
-					ortholog.setCount(0);
-				}
-			}
-		}
-
-		/*
-		 * Redistribute the values of Orthologs that appear in several modules
-		 * This is an unbiased distribution as the value is simply divided
-		 * by the number of modules to which it maps.
-		 */
-		for (Entry<String, Set<Module>> entry : koModules.entrySet()) {
-			int observedModulesCount = entry.getValue().size();
-			// if Ortholog is observed in more than one Module
-			if (observedModulesCount > 1) {
-				// Proportion the value
-				double proportionedValue = orthologAbundanceMap.get(entry.getKey()) / observedModulesCount;
-				for (Module m : entry.getValue()) {
-					// update every occurrence of the Ortholog in this module, not only one of them (B02)
-					for (Ortholog ortholog : m.getFlatOrthologs()) {
-						if (ortholog.getOrthologId().equals(entry.getKey())) {
-							ortholog.setCount(proportionedValue);
-						}
-					}
-				}
-			}
-		}
-
-		for (Module module : predictedModules) {
-			optimizeModule(module, options);
-		}
-
-		return new Modules(predictedModules, options.getCoverage());
-	}
-	
-	protected Module optimizeModule(Module module, ModuleInferenceOptions options) {
-		// generate alternative orthologs in a structure
-		/*
-		 * FIXME avoid computing all paths for every instance of a module template
-		 * Use some sort of a matrix or a better data structure to hold all the paths
-		 */
-		List<List<List<Ortholog>>> allPaths = module.makeAllPaths();
-		// use a resolver to know which optimizer should be used
-		ModuleScoreCalculator optimizer = null;
-		
-		if (options.getAlgorithm()
-				.equals(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_REACTION_BASED.displayName())) {
-			optimizer = new ModuleAbundanceCoverageReactionMaximizer(options.isNormalizeByLength(), options.getComplexRule());
-		} else if (options.getAlgorithm()
-				.equals(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_ORTHOLOG_BASED.displayName())) {
-			optimizer = new ModuleAbundanceCoverageOrthologMaximizer(options.isNormalizeByLength());
-		} else if (options.getAlgorithm()
-				.equals(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_MEDIAN_BASED.displayName())) {
-			optimizer = new ModuleAbundanceCoverageMedianMaximizer(options.isNormalizeByLength(), options.getComplexRule());
-		} else if (options.getAlgorithm().equals(ModuleInferenceOptimizers.SUM.displayName())) {
-			optimizer = new ModuleAbundanceCoverageAbundanceSumMaximizer(options.isNormalizeByLength(), options.getComplexRule());
-		} else if (options.getAlgorithm().equals(ModuleInferenceOptimizers.MIN.displayName())) {
-			optimizer = new ModuleAbundanceCoverageAbundanceMinimizer(options.isNormalizeByLength(), options.getComplexRule());
-		}
-
-		// call the optimizer
-		PathwaySummary bestPath = optimizer.computeBestScore(allPaths, options);
-
-		// Skip filtering here and filter later
-		module.setCount(bestPath.getAbundance());
-		module.setCoverage(bestPath.getCoverage());
-		// Modify the modules to keep only the best pathway
-		List<List<Ortholog>> bestOrthologs = bestPath.getPathway();
-		int bestOrthologsSize = bestOrthologs.size();
-		List<List<List<Ortholog>>> orths = module.getOrthologs();
-		// replace the alternatives at each step by the best enzyme
-		for (int i = 0; i < bestOrthologsSize; i++) {
-			List<List<Ortholog>> step = new LinkedList<List<Ortholog>>();
-			step.add(bestOrthologs.get(i));
-			orths.set(i, step);
-		}
-		return module;
 	}
 }

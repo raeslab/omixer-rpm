@@ -2,14 +2,16 @@ package io.omixer.rpm.model;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import io.omixer.rpm.model.enums.ComplexRule;
 import io.omixer.rpm.model.enums.ScalingMethod;
+import io.omixer.rpm.scoring.ComplexRule;
+import io.omixer.rpm.scoring.Estimator;
+import io.omixer.rpm.scoring.ScoringOptions;
 
 
 public class ModuleInferenceOptions {
 
 	private Long id;
-	private String algorithm;
+	private Estimator estimator = new Estimator.Median();
 	private double coverage;
 	private long moduleSetId;
 	private int promiscuousity;
@@ -33,10 +35,17 @@ public class ModuleInferenceOptions {
 	}
 
 	/**
-	 * @return the algorithm
+	 * @return the score estimator (-s)
 	 */
-	public String getAlgorithm() {
-		return algorithm;
+	public Estimator getEstimator() {
+		return estimator;
+	}
+
+	/**
+	 * @return the options the module scorer needs
+	 */
+	public ScoringOptions getScoringOptions() {
+		return new ScoringOptions(estimator, complexRule, normalizeByLength);
 	}
 
 	/**
@@ -90,11 +99,11 @@ public class ModuleInferenceOptions {
 	}
 
 	/**
-	 * @param algorithm
-	 *            the algorithm to set
+	 * @param estimator
+	 *            the score estimator (-s)
 	 */
-	public void setAlgorithm(String algorithm) {
-		this.algorithm = algorithm;
+	public void setEstimator(Estimator estimator) {
+		this.estimator = estimator;
 	}
 
 	/**
@@ -144,7 +153,7 @@ public class ModuleInferenceOptions {
 	@Override
 	public String toString() {
 		ToStringBuilder tsb = new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE);
-		tsb.append(getAlgorithm());
+		tsb.append(getEstimator());
 		tsb.append(getCoverage());
 		tsb.append(getModuleSetId());
 		tsb.append(getPromiscuousity());

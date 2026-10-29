@@ -10,7 +10,7 @@ import org.apache.commons.lang3.math.NumberUtils;
  * A basic feature with name, taxon, score, and one other function so far
  * TODO add an annotation Map to allow for more than 1 annotation
  * 
- * @author <a href="mailto:youssef.darzi@gmail.com">Youssef Darzi</a>
+ * @author <a href="mailto:youssef.darzi@omixer.io">Youssef Darzi</a>
  * 
  */
 public class BasicFeature {

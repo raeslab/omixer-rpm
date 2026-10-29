@@ -13,7 +13,7 @@ public class ModuleTaxonomyMatrixWriterSpec extends Specification {
 		List<String> modules = ["MF0012", "MF0003", "MF0101", "MF0040", "MF0007"]
 		Map<String, Modules> moduleInference = new LinkedHashMap<>()
 		["S3", "S1", "Z9", "S10", "A2"].each { sample ->
-			moduleInference[sample] = new Modules(modules.collect { new Module(it, "Sp1", 1d, 1d, null) }, 0d)
+			moduleInference[sample] = new Modules(modules.collect { new Module(it, "Sp1", 1d, 1d) }, 0d)
 		}
 
 		when:
@@ -38,15 +38,15 @@ public class ModuleTaxonomyMatrixWriterSpec extends Specification {
 		 * 
 		 */
 		List<Module> s1Modules = [
-				new Module("M1", "Sp1", 0.7, 1, null),
-				new Module("M1", "Sp2", 0.3, 1, null),
-				new Module("M2", "Sp2", 0.7, 1, null),
-				new Module("M3", "Sp2", 0.7, 1, null)]
+				new Module("M1", "Sp1", 0.7, 1),
+				new Module("M1", "Sp2", 0.3, 1),
+				new Module("M2", "Sp2", 0.7, 1),
+				new Module("M3", "Sp2", 0.7, 1)]
 		
 		List<Module> s2Modules = [
-				new Module("M1", "Sp1", 0.7, 2, null),
-				new Module("M1", "Sp2", 0.8, 3, null),
-				new Module("M2", "Sp2", 0.3, 1, null)]
+				new Module("M1", "Sp1", 0.7, 2),
+				new Module("M1", "Sp2", 0.8, 3),
+				new Module("M2", "Sp2", 0.3, 1)]
 		
 		moduleInference["S1"] = new Modules(s1Modules, 0.6)
 		moduleInference["S2"] = new Modules(s2Modules, 0.6)
@@ -79,15 +79,15 @@ public class ModuleTaxonomyMatrixWriterSpec extends Specification {
 		 *
 		 */
 		List<Module> s1Modules = [
-				new Module("M1", "Sp1", 0.7, 1, null),
-				new Module("M1", "Sp2", 0.3, 1, null),
-				new Module("M2", "Sp2", 0.7, 1, null),
-				new Module("M3", "Sp2", 0.7, 1, null)]
+				new Module("M1", "Sp1", 0.7, 1),
+				new Module("M1", "Sp2", 0.3, 1),
+				new Module("M2", "Sp2", 0.7, 1),
+				new Module("M3", "Sp2", 0.7, 1)]
 		
 		List<Module> s2Modules = [
-				new Module("M1", "Sp1", 0.7, 2, null),
-				new Module("M1", "Sp2", 0.8, 3, null),
-				new Module("M2", "Sp2", 0.3, 1, null)]
+				new Module("M1", "Sp1", 0.7, 2),
+				new Module("M1", "Sp2", 0.8, 3),
+				new Module("M2", "Sp2", 0.3, 1)]
 		
 		moduleInference["S1"] = new Modules(s1Modules, 0.6)
 		moduleInference["S2"] = new Modules(s2Modules, 0.6)

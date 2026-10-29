@@ -9,13 +9,14 @@ import org.apache.commons.logging.LogFactory;
 import io.omixer.rpm.model.Module;
 import io.omixer.rpm.model.ModuleInferenceOptions;
 import io.omixer.rpm.model.enums.ScalingMethod;
+import io.omixer.rpm.scoring.Estimator;
 import io.omixer.utils.Constants;
 import io.omixer.utils.utils.FileUtils;
 
 /**
  * A client app to infer modules from command line
  * 
- * @author <a href="mailto:youssef.darzi@gmail.com">Youssef Darzi</a>
+ * @author <a href="mailto:youssef.darzi@omixer.io">Youssef Darzi</a>
  *
  */
 public abstract class AbstractInferenceApp {
@@ -40,10 +41,10 @@ public abstract class AbstractInferenceApp {
 		}
 	};
 
-	protected ModuleInferenceOptions makeModuleSetOptions(String algorithm, double coverage,
+	protected ModuleInferenceOptions makeModuleSetOptions(Estimator estimator, double coverage,
 			ScalingMethod scalingMethod) {
 		final ModuleInferenceOptions options = new ModuleInferenceOptions();
-		options.setAlgorithm(algorithm);
+		options.setEstimator(estimator);
 		options.setCoverage(coverage);
 		options.setScalingMethod(scalingMethod);
 		return options;
