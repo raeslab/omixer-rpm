@@ -1,10 +1,12 @@
 package io.omixer.rpm.service
 
+import java.nio.file.Path
+
 import io.omixer.rpm.model.BasicFeature
 import io.omixer.rpm.model.Module
 import io.omixer.rpm.model.ModuleInferenceOptions
 import io.omixer.rpm.model.enums.ModuleInferenceOptimizers
-import io.omixer.rpm.parsers.ModuleParser
+import io.omixer.rpm.io.ModuleDatabaseReader
 import io.omixer.rpm.service.impl.ModuleManagerImpl
 
 import spock.lang.Specification
@@ -20,7 +22,7 @@ class MinEstimatorSpec extends Specification {
 		def options = new ModuleInferenceOptions()
 		options.setAlgorithm(ModuleInferenceOptimizers.MIN.displayName())
 		options.setCoverage(0d)
-		def referenceModules = ModuleParser.parseModuleFile(new File("src/test/resources/module-inference.list"))
+		def referenceModules = Module.fromDatabase(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list")))
 		new ModuleManagerImpl()
 				.inferModules(abundances.collect { ko, value -> new BasicFeature(null, ko, value) }, options, referenceModules)
 				.getModules().find { it.getModuleId() == "MF0007" }

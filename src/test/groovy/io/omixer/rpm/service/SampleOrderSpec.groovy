@@ -4,7 +4,8 @@ import java.nio.file.Path
 
 import io.omixer.rpm.model.ModuleInferenceOptions
 import io.omixer.rpm.model.enums.ModuleInferenceOptimizers
-import io.omixer.rpm.parsers.ModuleParser
+import io.omixer.rpm.io.ModuleDatabaseReader
+import io.omixer.rpm.model.Module
 import io.omixer.rpm.service.impl.ModuleManagerImpl
 
 import spock.lang.Specification
@@ -25,7 +26,7 @@ class SampleOrderSpec extends Specification {
 	def setup() {
 		manager = new ModuleManagerImpl()
 		manager.setInputFormat("1")
-		referenceModules = ModuleParser.parseModuleFile(new File("src/test/resources/module-inference.list"))
+		referenceModules = Module.fromDatabase(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list")))
 		options = new ModuleInferenceOptions()
 		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_MEDIAN_BASED.displayName())
 		options.setCoverage(0d)

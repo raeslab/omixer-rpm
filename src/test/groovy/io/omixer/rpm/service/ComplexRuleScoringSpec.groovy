@@ -1,11 +1,13 @@
 package io.omixer.rpm.service
 
+import java.nio.file.Path
+
 import io.omixer.rpm.model.BasicFeature
 import io.omixer.rpm.model.Module
 import io.omixer.rpm.model.ModuleInferenceOptions
 import io.omixer.rpm.model.enums.ComplexRule
 import io.omixer.rpm.model.enums.ModuleInferenceOptimizers
-import io.omixer.rpm.parsers.ModuleParser
+import io.omixer.rpm.io.ModuleDatabaseReader
 import io.omixer.rpm.service.impl.ModuleManagerImpl
 
 import spock.lang.Specification
@@ -35,7 +37,7 @@ class ComplexRuleScoringSpec extends Specification {
 		options.setComplexRule(rule)
 		options.setNormalizeByLength(normalize)
 		options.setCoverage(0d)
-		def modules = ModuleParser.parseModuleFile(new File("src/test/resources/golden/inputs/edge/edge-modules.list"))
+		def modules = Module.fromDatabase(ModuleDatabaseReader.read(Path.of("src/test/resources/golden/inputs/edge/edge-modules.list")))
 		new ModuleManagerImpl()
 				.inferModules(abundances.collect { ko, value -> new BasicFeature(null, ko, value) }, options, modules)
 				.getModules().find { it.getModuleId() == module }

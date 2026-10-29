@@ -5,7 +5,8 @@ import java.nio.file.Path
 import io.omixer.rpm.exceptions.InputFormatException
 import io.omixer.rpm.model.ModuleInferenceOptions
 import io.omixer.rpm.model.enums.ModuleInferenceOptimizers
-import io.omixer.rpm.parsers.ModuleParser
+import io.omixer.rpm.io.ModuleDatabaseReader
+import io.omixer.rpm.model.Module
 import io.omixer.rpm.service.impl.ModuleManagerImpl
 import io.omixer.utils.exceptions.DuplicateColumnException
 
@@ -32,7 +33,7 @@ class MatrixInputSpec extends Specification {
 
 		when:
 		manager.inferModules(matrix, options,
-				ModuleParser.parseModuleFile(new File("src/test/resources/module-inference.list")))
+				Module.fromDatabase(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list"))))
 
 		then: "before, the values of both S1 columns were silently added together"
 		DuplicateColumnException e = thrown()
@@ -52,7 +53,7 @@ class MatrixInputSpec extends Specification {
 
 		when:
 		manager.inferModules(matrix, options,
-				ModuleParser.parseModuleFile(new File("src/test/resources/module-inference.list")))
+				Module.fromDatabase(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list"))))
 
 		then: "before, a raw NumberFormatException with no file or line"
 		InputFormatException e = thrown()

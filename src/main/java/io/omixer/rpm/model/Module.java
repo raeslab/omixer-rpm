@@ -5,6 +5,12 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import io.omixer.rpm.domain.Alternative;
+import io.omixer.rpm.domain.ModuleDatabase;
+import io.omixer.rpm.domain.ModuleDefinition;
+import io.omixer.rpm.domain.Step;
 
 /**
  * TODO merge with BasicFeature and provide a class hierarchy for basic modules,
@@ -32,6 +38,33 @@ public class Module {
 		super();
 		this.hierarchy = new HashMap<Integer, HierarchicalEntry>();
 		this.orthologs = new LinkedList<List<List<Ortholog>>>();
+	}
+
+	/**
+	 * The mutable form of a module definition, for the scoring code until it works on {@link ModuleDefinition}
+	 * (REFACTORING.md, step 2)
+	 */
+	public static Module from(ModuleDefinition definition) {
+		Module module = new Module();
+		module.setModuleId(definition.id());
+		module.setName(definition.name());
+		for (Step step : definition.steps()) {
+			List<List<Ortholog>> alternatives = new LinkedList<>();
+			for (Alternative alternative : step.alternatives()) {
+				List<Ortholog> subunits = new LinkedList<>();
+				for (String ko : alternative.subunits()) {
+					subunits.add(new Ortholog(ko));
+				}
+				alternatives.add(subunits);
+			}
+			module.addOrthologs(alternatives);
+		}
+		return module;
+	}
+
+	/** {@link #from(ModuleDefinition)} for every module of a database, in database order */
+	public static List<Module> fromDatabase(ModuleDatabase database) {
+		return database.modules().stream().map(Module::from).collect(Collectors.toList());
 	}
 
 	public Module(String moduleId, String taxon, double coverage, double count,

@@ -1,5 +1,7 @@
 package io.omixer.rpm.service
 
+import java.nio.file.Path
+
 
 
 import io.omixer.rpm.model.BasicFeature;
@@ -7,7 +9,7 @@ import io.omixer.rpm.model.Module;
 import io.omixer.rpm.model.ModuleInferenceOptions;
 import io.omixer.rpm.model.Modules;
 import io.omixer.rpm.model.enums.ModuleInferenceOptimizers;
-import io.omixer.rpm.parsers.ModuleParser;
+import io.omixer.rpm.io.ModuleDatabaseReader
 import io.omixer.rpm.service.impl.ModuleManagerImpl;
 import io.omixer.utils.Constants;
 
@@ -21,7 +23,7 @@ public class ModuleManagerSpecs extends Specification {
 	
 	def setup() {
 		manager = new ModuleManagerImpl()
-		referenceModules = ModuleParser.parseModuleFile(new File("src/test/resources/module-inference.list"))
+		referenceModules = Module.fromDatabase(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list")))
 		options = new ModuleInferenceOptions()
 		options.setCoverage(0.66)
 		options.setNormalizeByLength(false)

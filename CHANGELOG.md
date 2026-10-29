@@ -8,6 +8,8 @@
 ### Fixed
 - **B26** `-e 1` with `--ignore-taxonomic-info` on a taxon input (`-a 2`) writes the `Module Value Coverage` layout.
   Before, the files had a `Taxon` column holding the text `null`. Values are unchanged.
+- **B27** Module database: a step alternative without a KO (e.g. the line `,`) stops the run with the file and line.
+  Before, it became an empty alternative (`NaN` abundance with `--complex-rule all`).
 
 ## 1.2.1 (2026-10-28)
 

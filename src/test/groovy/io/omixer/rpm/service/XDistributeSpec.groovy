@@ -1,5 +1,7 @@
 package io.omixer.rpm.service
 
+import java.nio.file.Path
+
 import io.omixer.rpm.model.BasicFeature
 import io.omixer.rpm.model.Module
 import io.omixer.rpm.model.ModuleCoverageDistribution
@@ -7,7 +9,7 @@ import io.omixer.rpm.model.ModuleInferenceOptions
 import io.omixer.rpm.model.Modules
 import io.omixer.rpm.model.Ortholog
 import io.omixer.rpm.model.enums.ModuleInferenceOptimizers
-import io.omixer.rpm.parsers.ModuleParser
+import io.omixer.rpm.io.ModuleDatabaseReader
 import io.omixer.rpm.service.impl.ModuleManagerImpl
 
 import spock.lang.Specification
@@ -29,7 +31,7 @@ class XDistributeSpec extends Specification {
 
 	def setup() {
 		manager = new ModuleManagerImpl()
-		referenceModules = ModuleParser.parseModuleFile(new File("src/test/resources/xdistribute-modules.list"))
+		referenceModules = Module.fromDatabase(ModuleDatabaseReader.read(Path.of("src/test/resources/xdistribute-modules.list")))
 		options = new ModuleInferenceOptions()
 		options.setAlgorithm(ModuleInferenceOptimizers.ABUNDANCE_COVERAGE_MEDIAN_BASED.displayName())
 		options.setCoverage(0d)
@@ -103,7 +105,7 @@ class XDistributeSpec extends Specification {
 		taxa.every { taxon, abundances ->
 			options.setPerTaxon(false)
 			Map<String, Module> alone = byId(manager.inferModules(features(taxon, abundances), options,
-					ModuleParser.parseModuleFile(new File("src/test/resources/xdistribute-modules.list"))))
+					Module.fromDatabase(ModuleDatabaseReader.read(Path.of("src/test/resources/xdistribute-modules.list")))))
 			perTaxon.getModules().findAll { it.getTaxon() == taxon }.every {
 				it.getCount() == alone[it.getModuleId()].getCount() && it.getCoverage() == alone[it.getModuleId()].getCoverage()
 			}
@@ -127,7 +129,7 @@ class XDistributeSpec extends Specification {
 	def "per-taxon --Xdistribute on the legacy taxon matrix reports every taxon and yields an automatic cutoff"() {
 
 		setup:
-		def gmms = ModuleParser.parseModuleFile(new File("src/test/resources/module.list"))
+		def gmms = Module.fromDatabase(ModuleDatabaseReader.read(Path.of("src/test/resources/module.list")))
 		manager.setInputFormat("2")
 		options.setPerTaxon(true)
 

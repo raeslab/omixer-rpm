@@ -22,6 +22,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import io.omixer.rpm.exceptions.OmixerRpmException;
+import io.omixer.rpm.io.ModuleDatabaseReader;
 import io.omixer.rpm.model.Module;
 import io.omixer.rpm.model.ModuleCoverageDistribution;
 import io.omixer.rpm.model.ModuleInferenceOptions;
@@ -32,7 +33,6 @@ import io.omixer.rpm.model.enums.ScalingMethod;
 import io.omixer.rpm.model.io.MatrixWriter;
 import io.omixer.rpm.model.io.ModuleMatrixWriter;
 import io.omixer.rpm.model.io.ModuleTaxonomyMatrixWriter;
-import io.omixer.rpm.parsers.ModuleParser;
 import io.omixer.rpm.service.impl.ModuleManagerImpl;
 import io.omixer.utils.exceptions.DuplicateColumnException;
 import io.omixer.utils.exceptions.IncorrectNumberOfEntriesException;
@@ -306,7 +306,7 @@ public class InferenceApp extends AbstractInferenceApp {
 		// false when no module is observed in any sample, so that no automatic cutoff exists
 		boolean modulesObserved = true;
 		try {
-			final List<Module> referenceModules = ModuleParser.parseModuleFile(moduleFile);
+			final List<Module> referenceModules = Module.fromDatabase(ModuleDatabaseReader.read(moduleFile.toPath()));
 			Map<String, Modules> moduleInference = moduleManager.inferModules(inputdir,
 					moduleInferenceOptions, referenceModules);
 			// Check if the automatic threshold detection is required
