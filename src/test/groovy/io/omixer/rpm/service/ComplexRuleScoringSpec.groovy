@@ -2,7 +2,6 @@ package io.omixer.rpm.service
 
 import java.nio.file.Path
 
-import io.omixer.rpm.model.BasicFeature
 import io.omixer.rpm.model.Module
 import io.omixer.rpm.model.ModuleInferenceOptions
 import io.omixer.rpm.scoring.ComplexRule
@@ -39,8 +38,8 @@ class ComplexRuleScoringSpec extends Specification {
 		options.setNormalizeByLength(normalize)
 		options.setCoverage(0d)
 		def modules = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/golden/inputs/edge/edge-modules.list")))
-		new ModuleManagerImpl()
-				.inferModules(abundances.collect { ko, value -> new BasicFeature(null, ko, value) }, options, modules)
+		SampleInput.infer(new ModuleManagerImpl(), abundances.collect { ko, value -> SampleInput.row(null, ko, value) },
+				options, modules)
 				.getModules().find { it.getModuleId() == module }
 	}
 

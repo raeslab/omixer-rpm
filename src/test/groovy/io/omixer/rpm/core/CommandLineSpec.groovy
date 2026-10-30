@@ -97,6 +97,7 @@ class CommandLineSpec extends Specification {
 		["-i", TAXON_MATRIX, "-d", DATABASE, "-a", "1"]                           | "taxon_matrix.tsv, line 2: 'Sp1\tK00001\t1\t0' is not KO<TAB>one abundance per sample"
 		["-i", "no-such-input.tsv", "-d", DATABASE]                               | "no-such-input.tsv (No such file or directory)"
 		["-i", MATRIX, "-d", "no-such-database.list"]                             | "no-such-database.list (No such file or directory)"
+		["-i", "src/test/resources/empty-matrix.tsv", "-d", DATABASE]             | "empty-matrix.tsv is empty: a matrix starts with a header line"
 	}
 
 	def "an input where no module is observed reports none, with a warning and no coverage plot"() {

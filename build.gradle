@@ -33,7 +33,7 @@ dependencies {
 	implementation 'org.apache.commons:commons-math3:3.6.1'
 	implementation 'org.apache.commons:commons-lang3:3.21.0'
 
-	implementation 'io.omixer:omixer-utils:1.1.0'
+	implementation 'io.omixer:omixer-utils:1.2.0'
 
 	// Groovy is only used by the Spock tests; spock-core brings it in
 	testImplementation platform('org.spockframework:spock-bom:2.5-groovy-5.0')

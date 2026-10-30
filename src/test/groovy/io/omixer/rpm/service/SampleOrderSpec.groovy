@@ -5,6 +5,7 @@ import java.nio.file.Path
 import io.omixer.rpm.model.ModuleInferenceOptions
 import io.omixer.rpm.scoring.Estimator
 import io.omixer.rpm.engine.CompiledDatabase
+import io.omixer.rpm.io.InputFormat
 import io.omixer.rpm.io.ModuleDatabaseReader
 import io.omixer.rpm.service.impl.ModuleManagerImpl
 
@@ -25,7 +26,7 @@ class SampleOrderSpec extends Specification {
 
 	def setup() {
 		manager = new ModuleManagerImpl()
-		manager.setInputFormat("1")
+		manager.setInputFormat(InputFormat.KO)
 		database = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list")))
 		options = new ModuleInferenceOptions()
 		options.setEstimator(new Estimator.Median())

@@ -23,6 +23,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import io.omixer.rpm.engine.CompiledDatabase;
 import io.omixer.rpm.exceptions.OmixerRpmException;
+import io.omixer.rpm.io.InputFormat;
 import io.omixer.rpm.io.ModuleDatabaseReader;
 import io.omixer.rpm.model.ModuleCoverageDistribution;
 import io.omixer.rpm.model.ModuleInferenceOptions;
@@ -290,7 +291,11 @@ public class InferenceApp extends AbstractInferenceApp {
 
 		// Replace by optionparser
 		ModuleManagerImpl moduleManager = new ModuleManagerImpl();
-		moduleManager.setInputFormat(annotation);
+		moduleManager.setInputFormat(switch (annotation) {
+			case "2" -> InputFormat.TAXON_KO;
+			case "h2" -> InputFormat.HUMANN;
+			default -> InputFormat.KO;
+		});
 		if (!threads.equals("1")) {
 			moduleManager.setConcurrent(true);
 		}

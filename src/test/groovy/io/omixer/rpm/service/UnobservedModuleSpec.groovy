@@ -2,7 +2,6 @@ package io.omixer.rpm.service
 
 import java.nio.file.Path
 
-import io.omixer.rpm.model.BasicFeature
 import io.omixer.rpm.model.Module
 import io.omixer.rpm.model.ModuleInferenceOptions
 import io.omixer.rpm.scoring.Estimator
@@ -27,8 +26,8 @@ class UnobservedModuleSpec extends Specification {
 		def database = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list")))
 
 		when:
-		Module module = new ModuleManagerImpl()
-				.inferModules([new BasicFeature(null, "K00001", 2d)], options, database)
+		Module module = SampleInput.infer(new ModuleManagerImpl(),
+				[SampleInput.row(null, "K00001", 2d)], options, database)
 				.getModules().find { it.getModuleId() == "MF0004" }
 
 		then: "before, median and average (without -n) gave NaN"

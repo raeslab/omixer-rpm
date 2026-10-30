@@ -6,6 +6,7 @@ import io.omixer.rpm.model.enums.ScalingMethod;
 import io.omixer.rpm.scoring.ComplexRule;
 import io.omixer.rpm.scoring.Estimator;
 import io.omixer.rpm.scoring.ScoringOptions;
+import io.omixer.rpm.scoring.SharedKoResolution;
 
 
 public class ModuleInferenceOptions {
@@ -42,6 +43,13 @@ public class ModuleInferenceOptions {
 	}
 
 	/**
+	 * @return how modules share a KO: split equally with --Xdistribute, otherwise not at all
+	 */
+	public SharedKoResolution getSharedKoResolution() {
+		return distributeOrhologAbundance ? new SharedKoResolution.EqualSplit() : new SharedKoResolution.None();
+	}
+
+	/**
 	 * @return the options the module scorer needs
 	 */
 	public ScoringOptions getScoringOptions() {
@@ -68,10 +76,6 @@ public class ModuleInferenceOptions {
 	
 	public boolean isPerTaxon() {
 		return perTaxon;
-	}
-	
-	public boolean isDistributeOrhologAbundance() {
-		return distributeOrhologAbundance;
 	}
 	
 	public ComplexRule getComplexRule() {

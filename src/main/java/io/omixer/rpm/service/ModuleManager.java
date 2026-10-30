@@ -2,11 +2,10 @@ package io.omixer.rpm.service;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 import io.omixer.rpm.engine.CompiledDatabase;
-import io.omixer.rpm.model.BasicFeature;
+import io.omixer.rpm.engine.Profiles;
 import io.omixer.rpm.model.Module;
 import io.omixer.rpm.model.ModuleInferenceOptions;
 import io.omixer.rpm.model.Modules;
@@ -20,17 +19,15 @@ import io.omixer.utils.exceptions.IncorrectNumberOfEntriesException;
 public interface ModuleManager {
 
 	/**
-	 *Does module inference on a list of Orthologs
+	 * Does module inference on profiles
 	 * 
-	 * The orthologs that were mapped in the module have a value greater than 0 
-	 * 
-	 * @param orthologs
+	 * @param profiles the input: a profile per sample, or per taxon of a sample
 	 * @param options
 	 * @param database the reference modules
-	 * @return a {@link Module} result for every module of the database (per taxon in per-taxon runs), with the
-	 *         coverage cutoff defined in {@link ModuleInferenceOptions}
+	 * @return for every sample in input order, a {@link Module} result for every module of the database (per taxon in
+	 *         per-taxon runs), with the coverage cutoff defined in {@link ModuleInferenceOptions}
 	 */
-	Modules inferModules(List<BasicFeature> orthologs, ModuleInferenceOptions options, CompiledDatabase database);
+	Map<String, Modules> inferModules(Profiles profiles, ModuleInferenceOptions options, CompiledDatabase database);
 
 	/**
 	 * Does module inference on an Orthologs abundance file, optionally annotated with taxonomic information

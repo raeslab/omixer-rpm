@@ -10,6 +10,8 @@
   Before, the files had a `Taxon` column holding the text `null`. Values are unchanged.
 - **B27** Module database: a step alternative without a KO (e.g. the line `,`) stops the run with the file and line.
   Before, it became an empty alternative (`NaN` abundance with `--complex-rule all`).
+- **B28** An empty matrix file stops the run with "<file> is empty: a matrix starts with a header line" (exit code 1).
+  Before, it crashed with a `NullPointerException` stack trace.
 
 ## 1.2.1 (2026-10-28)
 

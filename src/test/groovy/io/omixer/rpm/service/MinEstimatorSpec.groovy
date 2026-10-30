@@ -2,7 +2,6 @@ package io.omixer.rpm.service
 
 import java.nio.file.Path
 
-import io.omixer.rpm.model.BasicFeature
 import io.omixer.rpm.model.Module
 import io.omixer.rpm.model.ModuleInferenceOptions
 import io.omixer.rpm.scoring.Estimator
@@ -24,8 +23,8 @@ class MinEstimatorSpec extends Specification {
 		options.setEstimator(new Estimator.Min())
 		options.setCoverage(0d)
 		def database = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list")))
-		new ModuleManagerImpl()
-				.inferModules(abundances.collect { ko, value -> new BasicFeature(null, ko, value) }, options, database)
+		SampleInput.infer(new ModuleManagerImpl(),
+				abundances.collect { ko, value -> SampleInput.row(null, ko, value) }, options, database)
 				.getModules().find { it.getModuleId() == "MF0007" }
 	}
 

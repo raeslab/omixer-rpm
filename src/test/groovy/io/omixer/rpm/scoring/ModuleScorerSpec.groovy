@@ -22,7 +22,13 @@ class ModuleScorerSpec extends Specification {
 
 	/** The profile as KO values indexed by the database's KO indexes; KOs not given are 0 */
 	private static double[] values(CompiledDatabase database, Map<String, Double> profile) {
-		(0..<database.koCount()).collect { profile.getOrDefault(database.ko(it), 0d) } as double[]
+		double[] values = new double[database.koCount()]
+		profile.each { ko, value ->
+			if (database.indexOf(ko) >= 0) {
+				values[database.indexOf(ko)] = value
+			}
+		}
+		values
 	}
 
 	private static ModuleScore score(String module, Map<String, Double> profile, Estimator estimator,

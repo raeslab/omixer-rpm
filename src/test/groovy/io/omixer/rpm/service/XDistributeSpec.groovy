@@ -2,13 +2,13 @@ package io.omixer.rpm.service
 
 import java.nio.file.Path
 
-import io.omixer.rpm.model.BasicFeature
 import io.omixer.rpm.model.Module
 import io.omixer.rpm.model.ModuleCoverageDistribution
 import io.omixer.rpm.model.ModuleInferenceOptions
 import io.omixer.rpm.model.Modules
 import io.omixer.rpm.scoring.Estimator
 import io.omixer.rpm.engine.CompiledDatabase
+import io.omixer.rpm.io.InputFormat
 import io.omixer.rpm.io.ModuleDatabaseReader
 import io.omixer.rpm.service.impl.ModuleManagerImpl
 
@@ -39,8 +39,8 @@ class XDistributeSpec extends Specification {
 		options.setDistributeOrhologAbundance(true)
 	}
 
-	private static List<BasicFeature> features(String taxon, Map<String, Double> abundances) {
-		abundances.collect { ko, value -> new BasicFeature(taxon, ko, value) }
+	private static List<List> features(String taxon, Map<String, Double> abundances) {
+		abundances.collect { ko, value -> SampleInput.row(taxon, ko, value) }
 	}
 
 	private static Map<String, Module> byId(Modules modules) {
@@ -50,7 +50,7 @@ class XDistributeSpec extends Specification {
 	def "a KO repeated inside one module, and used by no other module, is not split"() {
 
 		when:
-		Map<String, Module> result = byId(manager.inferModules(
+		Map<String, Module> result = byId(SampleInput.infer(manager,
 				features(null, [K10001: 7d, K10002: 1d]), options, database))
 
 		then: "steps are 7, 1, 7, so the median is 7 (before the fix: K10001 was split against itself and the median was 3.5)"
@@ -61,7 +61,7 @@ class XDistributeSpec extends Specification {
 	def "a KO repeated inside one module and used by one other module is split in two, at every occurrence"() {
 
 		when:
-		Map<String, Module> result = byId(manager.inferModules(
+		Map<String, Module> result = byId(SampleInput.infer(manager,
 				features(null, [K10010: 8d, K10013: 4d, K10014: 4d, K10015: 4d, K10016: 4d]), options, database))
 
 		then: """K10010 is used by 2 modules (X002, X003), so each gets 8/2 = 4, in both alternatives of X002.
@@ -76,7 +76,7 @@ class XDistributeSpec extends Specification {
 	def "every occurrence of a shared KO carries the reduced value"() {
 
 		when:
-		Map<String, Module> result = byId(manager.inferModules(
+		Map<String, Module> result = byId(SampleInput.infer(manager,
 				features(null, [K10010: 8d, K10013: 4d, K10014: 8d, K10015: 4d]), options, database))
 
 		then: """K10010 = 8 / 2 = 4 in both alternatives of X002's first step: mean(4, 4) = 4 and mean(4, 8) = 6, so the
@@ -92,11 +92,11 @@ class XDistributeSpec extends Specification {
 				T1: [K10001: 7d, K10002: 1d],
 				T2: [K10010: 8d, K10013: 4d, K10015: 4d, K10016: 2d],
 				T3: [K10001: 3d, K10002: 9d, K10010: 6d, K10016: 6d]]
-		List<BasicFeature> all = taxa.collectMany { taxon, abundances -> features(taxon, abundances) }
+		List<List> all = taxa.collectMany { taxon, abundances -> features(taxon, abundances) }
 
 		when:
 		options.setPerTaxon(true)
-		Modules perTaxon = manager.inferModules(all, options, database)
+		Modules perTaxon = SampleInput.infer(manager, all, options, database)
 
 		then: "every taxon is present (before the fix: only the last taxon was kept)"
 		perTaxon.getModules()*.getTaxon().toSet() == taxa.keySet()
@@ -105,7 +105,7 @@ class XDistributeSpec extends Specification {
 		and: "each taxon's results equal a separate run on that taxon's data"
 		taxa.every { taxon, abundances ->
 			options.setPerTaxon(false)
-			Map<String, Module> alone = byId(manager.inferModules(features(taxon, abundances), options,
+			Map<String, Module> alone = byId(SampleInput.infer(manager, features(taxon, abundances), options,
 					CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/xdistribute-modules.list")))))
 			perTaxon.getModules().findAll { it.getTaxon() == taxon }.every {
 				it.getCount() == alone[it.getModuleId()].getCount() && it.getCoverage() == alone[it.getModuleId()].getCoverage()
@@ -117,7 +117,7 @@ class XDistributeSpec extends Specification {
 
 		setup:
 		def gmms = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module.list")))
-		manager.setInputFormat("2")
+		manager.setInputFormat(InputFormat.TAXON_KO)
 		options.setPerTaxon(true)
 
 		when:

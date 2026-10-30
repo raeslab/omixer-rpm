@@ -16,20 +16,19 @@ import io.omixer.rpm.domain.ModuleDefinition;
  */
 public final class CompiledDatabase {
 
-	/** KO index → KO id */
-	private final List<String> kos;
+	/** KO id → KO index */
+	private final Map<String, Integer> index;
 	private final List<CompiledModule> modules;
 	/** KO index → the number of distinct modules using it */
 	private final int[] modulesUsing;
 
-	private CompiledDatabase(List<String> kos, List<CompiledModule> modules, int[] modulesUsing) {
-		this.kos = List.copyOf(kos);
+	private CompiledDatabase(Map<String, Integer> index, List<CompiledModule> modules, int[] modulesUsing) {
+		this.index = Map.copyOf(index);
 		this.modules = List.copyOf(modules);
 		this.modulesUsing = modulesUsing;
 	}
 
 	public static CompiledDatabase compile(ModuleDatabase database) {
-		List<String> kos = new ArrayList<>();
 		Map<String, Integer> index = new HashMap<>();
 		List<CompiledModule> modules = new ArrayList<>();
 		// each module's KOs, to count the distinct modules using a KO
@@ -44,10 +43,8 @@ public final class CompiledDatabase {
 					List<String> subunits = alternatives.get(a).subunits();
 					steps[s][a] = new int[subunits.size()];
 					for (int u = 0; u < subunits.size(); u++) {
-						int ko = index.computeIfAbsent(subunits.get(u), id -> {
-							kos.add(id);
-							return kos.size() - 1;
-						});
+						// a new KO gets the next index
+						int ko = index.computeIfAbsent(subunits.get(u), id -> index.size());
 						steps[s][a][u] = ko;
 						used.set(ko);
 					}
@@ -56,11 +53,11 @@ public final class CompiledDatabase {
 			modules.add(new CompiledModule(definition.id(), steps));
 			moduleKos.add(used);
 		}
-		int[] modulesUsing = new int[kos.size()];
+		int[] modulesUsing = new int[index.size()];
 		for (BitSet used : moduleKos) {
 			used.stream().forEach(ko -> modulesUsing[ko]++);
 		}
-		return new CompiledDatabase(kos, modules, modulesUsing);
+		return new CompiledDatabase(index, modules, modulesUsing);
 	}
 
 	/** @return the modules, in database order */
@@ -70,12 +67,12 @@ public final class CompiledDatabase {
 
 	/** @return the number of KOs some module uses; KO indexes run from 0 to this - 1 */
 	public int koCount() {
-		return kos.size();
+		return index.size();
 	}
 
-	/** @return the KO id of an index */
-	public String ko(int index) {
-		return kos.get(index);
+	/** @return the index of a KO, or -1 when no module uses it */
+	public int indexOf(String ko) {
+		return index.getOrDefault(ko, -1);
 	}
 
 	/** @return the number of distinct modules using the KO of an index */
