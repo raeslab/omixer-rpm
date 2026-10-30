@@ -24,7 +24,7 @@ repositories {
 }
 
 dependencies {
-	implementation 'commons-cli:commons-cli:1.11.0'
+	implementation 'info.picocli:picocli:4.7.7'
 	// commons-logging >= 1.3 delegates to the Log4j 2 API when it is on the classpath
 	implementation 'commons-logging:commons-logging:1.4.0'
 	implementation 'org.apache.logging.log4j:log4j-api:2.26.1'
@@ -84,7 +84,7 @@ tasks.named('check') {
 
 jar {
 	manifest {
-		attributes 'Main-Class': 'io.omixer.rpm.core.InferenceApp'
+		attributes 'Main-Class': 'io.omixer.rpm.cli.OmixerRpmCommand'
 		// read back by the help banner
 		attributes 'Implementation-Version': project.version
 	}
@@ -100,6 +100,8 @@ tasks.register('benchmark', JavaExec) {
 	def baselineJar = providers.gradleProperty('benchmark.baseline').map { file(it) }
 		.orElse(layout.buildDirectory.file('benchmark/omixer-rpm-1.2-all.jar').map { it.asFile })
 	def workDir = layout.buildDirectory.dir('benchmark')
+	// time limit as a fraction of the baseline time; ~1.10 when the baseline is a 2.0 jar
+	def limit = providers.gradleProperty('benchmark.limit').orElse('0.30')
 	inputs.file(currentJar)
 	argumentProviders.add({ [
 		currentJar.get().asFile.path,
@@ -107,7 +109,8 @@ tasks.register('benchmark', JavaExec) {
 		'https://github.com/raeslab/omixer-rpm/releases/download/v1.2.0/omixer-rpm-1.2-all.jar',
 		workDir.get().asFile.path,
 		file('src/test/resources/golden/inputs/synthetic').path,
-		file('src/test/resources/module.list').path
+		file('src/test/resources/module.list').path,
+		limit.get()
 	] } as CommandLineArgumentProvider)
 	outputs.upToDateWhen { false }
 }

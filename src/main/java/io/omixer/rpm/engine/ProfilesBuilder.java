@@ -3,6 +3,7 @@ package io.omixer.rpm.engine;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -29,6 +30,8 @@ public final class ProfilesBuilder implements ProfileSink {
 	/** sample → taxon (null unless per taxon) → observed values; samples in input order */
 	private final Map<String, Map<String, Observations>> samples = new LinkedHashMap<>();
 	private final Set<String> numericFunctions = new LinkedHashSet<>();
+	/** Function ids already checked: NumberUtils.isCreatable throws and catches an exception for every non-number */
+	private final Set<String> checkedFunctions = new HashSet<>();
 
 	/**
 	 * @param perTaxon true for one profile per taxon of a sample, false for one profile per sample (taxa summed)
@@ -48,7 +51,8 @@ public final class ProfilesBuilder implements ProfileSink {
 
 	@Override
 	public void add(String sample, String taxon, String function, double value) {
-		if (numericFunctions.size() < NUMERIC_FUNCTION_EXAMPLES && NumberUtils.isCreatable(function)) {
+		if (numericFunctions.size() < NUMERIC_FUNCTION_EXAMPLES && checkedFunctions.add(function)
+				&& NumberUtils.isCreatable(function)) {
 			numericFunctions.add(function);
 		}
 		Observations profile = samples.computeIfAbsent(sample, s -> new HashMap<>())
@@ -76,8 +80,8 @@ public final class ProfilesBuilder implements ProfileSink {
 			keys.add(new ProfileKey(sample, taxon));
 			observations.merge(kos, values);
 		}));
-		return new Profiles(database.koCount(), new ArrayList<>(samples.keySet()), keys, kos.toArray(int[][]::new),
-				values.toArray(double[][]::new));
+		return new Profiles(database.koCount(), perTaxon, new ArrayList<>(samples.keySet()), keys,
+				kos.toArray(int[][]::new), values.toArray(double[][]::new));
 	}
 
 	/** The observed values of one profile, in input order */

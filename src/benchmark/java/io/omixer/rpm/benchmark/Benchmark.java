@@ -18,10 +18,11 @@ import java.util.stream.IntStream;
 
 /**
  * Benchmark gate: runs the current jar and a baseline jar on the same generated inputs, on the same machine, and
- * fails when the current jar needs more heap, is slower than the tolerance, or writes different matrices.
+ * fails when the current jar fails under its heap cap, takes more than the time limit (a fraction of the baseline
+ * time), or writes different matrices.
  *
  * <pre>
- * Benchmark &lt;current jar&gt; &lt;baseline jar&gt; &lt;baseline url&gt; &lt;work directory&gt; &lt;synthetic inputs&gt; &lt;module database&gt;
+ * Benchmark &lt;current jar&gt; &lt;baseline jar&gt; &lt;baseline url&gt; &lt;work directory&gt; &lt;synthetic inputs&gt; &lt;module database&gt; &lt;time limit&gt;
  * </pre>
  *
  * The baseline jar is downloaded from the url when it does not exist.
@@ -30,12 +31,11 @@ public final class Benchmark {
 
 	/** Runs per jar and case; the fastest one counts */
 	private static final int RUNS = 3;
-	/** How much slower than the baseline the current jar may be */
-	private static final double TOLERANCE = 1.10;
 	/** Matrices compared between the two jars */
 	private static final List<String> MATRICES = List.of("modules.tsv", "modules-coverage.tsv");
 
-	private record Case(String name, String input, String heap, List<String> arguments) {}
+	/** A benchmark case; each jar runs under its own heap cap */
+	private record Case(String name, String input, String baselineHeap, String currentHeap, List<String> arguments) {}
 
 	private record Run(boolean succeeded, double seconds, Path outputDir) {}
 
@@ -43,15 +43,16 @@ public final class Benchmark {
 	}
 
 	public static void main(String[] args) throws IOException, InterruptedException {
-		if (args.length != 6) {
-			throw new IllegalArgumentException(
-					"Usage: Benchmark <current jar> <baseline jar> <baseline url> <work directory> <synthetic inputs> <module database>");
+		if (args.length != 7) {
+			throw new IllegalArgumentException("Usage: Benchmark <current jar> <baseline jar> <baseline url> "
+					+ "<work directory> <synthetic inputs> <module database> <time limit>");
 		}
 		Path current = Path.of(args[0]);
 		Path baseline = Path.of(args[1]);
 		Path work = Path.of(args[3]);
 		Path synthetic = Path.of(args[4]);
 		Path database = Path.of(args[5]);
+		double limit = Double.parseDouble(args[6]);
 		if (Files.notExists(baseline)) {
 			download(URI.create(args[2]), baseline);
 		}
@@ -60,29 +61,31 @@ public final class Benchmark {
 		scale(synthetic.resolve("synth-taxon-matrix.tsv"), inputs.resolve("taxon-200.tsv"), 200, 2);
 
 		List<Case> cases = List.of(
-				new Case("1,000 samples, KO matrix", "ko-1000.tsv", "128m", List.of("-a", "1", "-e", "2")),
-				new Case("1,000 samples, --Xdistribute", "ko-1000.tsv", "192m", List.of("-a", "1", "-e", "2", "--Xdistribute")),
-				new Case("200 samples per taxon", "taxon-200.tsv", "512m", List.of("-a", "2", "-e", "2")));
+				new Case("1,000 samples, KO matrix", "ko-1000.tsv", "128m", "64m", List.of("-a", "1", "-e", "2")),
+				new Case("1,000 samples, --Xdistribute", "ko-1000.tsv", "192m", "64m",
+						List.of("-a", "1", "-e", "2", "--Xdistribute")),
+				new Case("200 samples per taxon", "taxon-200.tsv", "512m", "32m", List.of("-a", "2", "-e", "2")));
 
 		List<String> failures = new ArrayList<>();
-		System.out.printf(Locale.ROOT, "%-32s %6s %12s %12s %7s%n", "case", "heap", "baseline s", "current s", "ratio");
+		System.out.printf(Locale.ROOT, "%-32s %12s %12s %12s %7s%n", "case", "heap", "baseline s", "current s", "ratio");
 		for (Case benchmarkCase : cases) {
 			List<String> arguments = new ArrayList<>(List.of("-i", inputs.resolve(benchmarkCase.input()).toString(),
 					"-d", database.toString()));
 			arguments.addAll(benchmarkCase.arguments());
-			Run baselineRun = fastest(baseline, benchmarkCase.heap(), arguments, work.resolve("baseline"));
-			Run currentRun = fastest(current, benchmarkCase.heap(), arguments, work.resolve("current"));
+			Run baselineRun = fastest(baseline, benchmarkCase.baselineHeap(), arguments, work.resolve("baseline"));
+			Run currentRun = fastest(current, benchmarkCase.currentHeap(), arguments, work.resolve("current"));
 			double ratio = currentRun.seconds() / baselineRun.seconds();
-			System.out.printf(Locale.ROOT, "%-32s %6s %12.2f %12.2f %7.2f%n", benchmarkCase.name(), benchmarkCase.heap(),
-					baselineRun.seconds(), currentRun.seconds(), ratio);
+			System.out.printf(Locale.ROOT, "%-32s %12s %12.2f %12.2f %7.2f%n", benchmarkCase.name(),
+					benchmarkCase.baselineHeap() + " / " + benchmarkCase.currentHeap(), baselineRun.seconds(),
+					currentRun.seconds(), ratio);
 			if (!baselineRun.succeeded()) {
-				failures.add(benchmarkCase.name() + ": the baseline jar failed (-Xmx" + benchmarkCase.heap() + ")");
+				failures.add(benchmarkCase.name() + ": the baseline jar failed (-Xmx" + benchmarkCase.baselineHeap() + ")");
 			} else if (!currentRun.succeeded()) {
-				failures.add(benchmarkCase.name() + ": the current jar failed (-Xmx" + benchmarkCase.heap() + ")");
+				failures.add(benchmarkCase.name() + ": the current jar failed (-Xmx" + benchmarkCase.currentHeap() + ")");
 			} else {
-				if (ratio > TOLERANCE) {
+				if (ratio > limit) {
 					failures.add(String.format(Locale.ROOT, "%s: %.2f times the baseline time (limit %.2f)",
-							benchmarkCase.name(), ratio, TOLERANCE));
+							benchmarkCase.name(), ratio, limit));
 				}
 				for (String matrix : MATRICES) {
 					if (Files.mismatch(baselineRun.outputDir().resolve(matrix), currentRun.outputDir().resolve(matrix)) != -1) {

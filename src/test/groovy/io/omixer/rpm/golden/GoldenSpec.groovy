@@ -3,7 +3,7 @@ package io.omixer.rpm.golden
 import java.nio.file.Files
 
 import io.omixer.rpm.LogCapture
-import io.omixer.rpm.core.InferenceApp
+import io.omixer.rpm.cli.OmixerRpmCommand
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Tag
@@ -218,7 +218,7 @@ class GoldenSpec extends Specification {
 	private Map execute(List<String> args) {
 		def outputDir = new File(Files.createTempDirectory("golden").toFile(), "out")
 		logCapture.lines.clear()
-		int status = InferenceApp.run((args + ["-o", outputDir.path]) as String[])
+		int status = OmixerRpmCommand.run((args + ["-o", outputDir.path]) as String[])
 		def log = new ArrayList<>(logCapture.lines)
 		assert status == 0: "${args.join(' ')} exited with ${status}: ${log}"
 		def files = outputDir.listFiles().collectEntries { [it.name, it.name.endsWith(".svg") ? "" : it.getText("UTF-8")] }

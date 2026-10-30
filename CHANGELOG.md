@@ -2,8 +2,30 @@
 
 ## Unreleased (2.0.0)
 
+Rewritten internals (see `REFACTORING.md`) with the same results as 1.2.1: every golden case and every matrix of
+the benchmark is identical, bit for bit. Only the items under "Fixed" change an output.
+
 ### Requirements
 - **Java 21 or newer** (1.2: Java 17).
+
+### Performance
+Benchmark (`gradle benchmark`, same machine, best of 3 runs, JVM start included):
+
+| Input | 1.2 | 2.0.0 | Smallest heap: 1.2 → 2.0.0 |
+|---|---|---|---|
+| 1,000 samples, KO matrix (`-e 2`) | 9.5 s | 1.5 s | 128 MB → 48 MB |
+| 1,000 samples, `--Xdistribute` | 8.4 s | 1.5 s | 192 MB → 48 MB |
+| 200 samples per taxon (`-a 2 -e 2`) | 7.4 s | 1.4 s | 512 MB → 24 MB |
+
+With the default heap, the process peaks at about 420 MB instead of 1.2–2 GB. Main causes: modules are no longer
+copied per sample, each module's best path is chosen step by step instead of scoring every path, profiles store only
+observed values, the matrix writer no longer searches every result list, and the check for numeric KO ids (a
+wrong `-a`) runs once per id instead of once per value (since commons-lang3 3.21, used from 1.2 on, it throws and
+catches an exception for every non-numeric id). `-t` now uses its own thread pool instead of the JVM-wide one.
+
+### Changed
+- The command line is parsed with picocli instead of commons-cli: same options, defaults, error messages and exit
+  codes. The help text has a new layout. An option given twice now takes the **last** value (1.x: the first).
 
 ### Fixed
 - **B26** `-e 1` with `--ignore-taxonomic-info` on a taxon input (`-a 2`) writes the `Module Value Coverage` layout.
@@ -12,6 +34,9 @@
   Before, it became an empty alternative (`NaN` abundance with `--complex-rule all`).
 - **B28** An empty matrix file stops the run with "<file> is empty: a matrix starts with a header line" (exit code 1).
   Before, it crashed with a `NullPointerException` stack trace.
+- **B29** Per-taxon matrix output (`-e 2`): a taxon and a module whose names join to the same text as another pair
+  (taxon `A` + module `BM1`, taxon `AB` + module `M1`) keep their own values. Before, both pairs shared one cell, so
+  one of them was written as 0.0. GMM and KEGG module ids can't produce this.
 
 ## 1.2.1 (2026-10-28)
 

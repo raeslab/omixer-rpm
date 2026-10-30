@@ -124,4 +124,16 @@ class ProfilesBuilderSpec extends Specification {
 		expect:
 		builder.numericFunctions() == ["1", "2", "0"]
 	}
+
+	def "function ids repeated in every sample give the numeric ids of their first occurrences"() {
+
+		given: "a matrix row passes its function id once per sample"
+		def builder = new ProfilesBuilder(DATABASE, false)
+		["S1", "S2"].each { builder.sample(it) }
+		["K1", "1", "K2", "2"].each { function -> ["S1", "S2"].each { builder.add(it, null, function, 1d) } }
+		["0", "5"].each { builder.add("S1", null, it, 1d) }
+
+		expect:
+		builder.numericFunctions() == ["1", "2", "0"]
+	}
 }

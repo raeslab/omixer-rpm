@@ -2,38 +2,46 @@
 A **R**eference **P**athways **M**apper for turning metagenomic functional profiles into pathway/module profiles.
 
 #### Usage
-java -jar [omixer-rpm.jar](../../releases/latest)  [-a <ANNOTATION>] [-c <COVERAGE>] [--complex-rule <RULE>] [-d <FILE>] [-e <FORMAT>] [-h] [-i <PATH>] [--ignore-taxonomic-info] [-n] [-o <DIRECTORY>] [-s <SCORE-ESTIMATOR>] [-t <THREADS>] [--Xdistribute]
+Requires Java 21 or newer.
+
+java -jar [omixer-rpm.jar](../../releases/latest) [-hn] [--ignore-taxonomic-info] [--Xdistribute] [-a=ANNOTATION] [-c=COVERAGE] [--complex-rule=RULE] [-d=FILE] [-e=FORMAT] [-i=PATH] [-o=DIRECTORY] [-s=SCORE-ESTIMATOR] [-t=THREADS]
+
+An option's value can also follow it after a space (`-c 0.5`), as in 1.x.
 
 <pre>
- -a,--annotation <ANNOTATION>             Input file annotation.
-                              Use 1 for orthologs only files or 2 for taxonomic annotation followed by orthologs.
-                              Defaults to 1
- -c,--coverage <COVERAGE>               The minimum coverage cut-off to accept a module [0.0 to 1.0].
-                              Defaults to -1, where the coverage is learned from the coverage distribution of all modules
-    --complex-rule <RULE>           How a complex step (subunits written K1,K2 in the module database) counts when only some subunits are observed.
-                              any: observed when at least one subunit is, since a missing subunit is more often unsampled than absent;
-                              all: observed only when every subunit is (otherwise no coverage and no abundance).
-                              Accepted values are [any|all].
-                              Defaults to any
- -d,--database <FILE>               The path to the modules database
- -e,--export-format <FORMAT>          The output file format.
-                              Use 1 for single tab separated files containing module id, abundance and coverage. 
-                              Use 2 for an abundance and a coverage matrices.
-                              Defaults to 1.
- -h,--help                    Show this help message and exit
- -i,--input <PATH>                  Path to the input matrix or input directory with one headerless file per sample
-    --ignore-taxonomic-info   Ignore taxonomic info from input file and infer modules for the whole metagenome instead
- -n,--normalize-by-length     Divide module score by its length. When combined with a median estimator, missing reactions (score = 0 )
-                              are included when estimating the median. If the estimated score equals zero then it is replaced by
-                              the minimum observed reaction score. If this option is specified, score calculation is based only on
-                              the number of observed reactions
- -o,--output-dir <DIRECTORY>             Path to the output directory
- -s,--score-estimator <SCORE-ESTIMATOR>        The score estimator.
-                              Accepted values are [median|average|sum|min].
-                              Defaults to median
- -t,--threads <THREADS>                Number of threads to use when mapping the modules.
-                              Defaults to 1
-    --Xdistribute             Experimental feature - When an ortholog is shared by N modules then its abundance is divided by N.
+  -a, --annotation=ANNOTATION
+                            Input file annotation.
+                            Use 1 for orthologs only files or 2 for taxonomic annotation followed by orthologs.
+                            Defaults to 1
+  -c, --coverage=COVERAGE   The minimum coverage cut-off to accept a module [0.0 to 1.0].
+                            Defaults to -1, where the coverage is learned from the coverage distribution of all modules
+      --complex-rule=RULE   How a complex step (subunits written K1,K2 in the module database) counts when only some subunits are observed.
+                            any: observed when at least one subunit is, since a missing subunit is more often unsampled than absent;
+                            all: observed only when every subunit is (otherwise no coverage and no abundance).
+                            Accepted values are [any|all].
+                            Defaults to any
+  -d, --database=FILE       The path to the modules database
+  -e, --export-format=FORMAT
+                            The output file format.
+                            Use 1 for single tab separated files containing module id, abundance and coverage. Use 2 for an abundance and a coverage matrices.
+                            Defaults to 1.
+  -h, --help                Show this help message and exit
+  -i, --input=PATH          Path to the input matrix or input directory with one headerless file per sample
+      --ignore-taxonomic-info
+                            Ignore taxonomic info from input file and infer modules for the whole metagenome instead
+  -n, --normalize-by-length Divide module score by its length. When combined with a median estimator, missing reactions (score = 0 )
+                            are included when estimating the median. If the estimated score equals zero then it is replaced by
+                            the minimum observed reaction score. If this option is specified, score calculation is based only on
+                            the number of observed reactions
+  -o, --output-dir=DIRECTORY
+                            Path to the output directory
+  -s, --score-estimator=SCORE-ESTIMATOR
+                            The score estimator.
+                            Accepted values are [median|average|sum|min].
+                            Defaults to median
+  -t, --threads=THREADS     Number of threads to use when mapping the modules.
+                            Defaults to 1
+      --Xdistribute         Experimental feature - When an ortholog is shared by N modules then its abundance is divided by N.
 </pre>
 
 #### Input file format.
