@@ -6,12 +6,12 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import io.omixer.rpm.engine.CompiledDatabase;
-import io.omixer.rpm.engine.ProfilesBuilder;
-import io.omixer.rpm.engine.Results;
-import io.omixer.rpm.io.CoveragePlotWriter;
-import io.omixer.rpm.io.ModuleDatabaseReader;
-import io.omixer.rpm.io.ProfileReader;
+import io.omixer.rpm.database.CompiledDatabase;
+import io.omixer.rpm.database.ModuleDatabaseReader;
+import io.omixer.rpm.inference.Results;
+import io.omixer.rpm.output.plot.CoveragePlotWriter;
+import io.omixer.rpm.profile.ProfilesBuilder;
+import io.omixer.rpm.profile.reader.ProfileReader;
 import io.omixer.utils.exceptions.IncorrectNumberOfEntriesException;
 
 /**

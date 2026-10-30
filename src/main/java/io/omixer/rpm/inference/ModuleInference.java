@@ -1,13 +1,13 @@
 package io.omixer.rpm.inference;
 
-import io.omixer.rpm.engine.CompiledDatabase;
-import io.omixer.rpm.engine.Profiles;
-import io.omixer.rpm.engine.Results;
+import io.omixer.rpm.database.CompiledDatabase;
+import io.omixer.rpm.profile.Profiles;
 
 /**
  * A method that infers the modules of every profile: their abundance, coverage and which are reported. Scoring
- * ({@link ScoringInference}) is the built-in one; methods that need extra dependencies (a MIP solver, a sampler) can
- * implement this interface in their own modules, which is why it is not sealed (REFACTORING.md, "Extension points").
+ * (ScoringInference, in inference.scoring) is the built-in one; methods that need extra dependencies (a MIP solver, a
+ * sampler) can implement this interface in their own modules, which is why it is not sealed (REFACTORING.md,
+ * "Extension points").
  */
 public interface ModuleInference {
 

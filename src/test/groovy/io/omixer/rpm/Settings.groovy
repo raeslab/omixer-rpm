@@ -2,18 +2,18 @@ package io.omixer.rpm
 
 import java.nio.file.Files
 
-import io.omixer.rpm.cutoff.CoverageCutoff
-import io.omixer.rpm.engine.CompiledDatabase
-import io.omixer.rpm.engine.ProfilesBuilder
-import io.omixer.rpm.engine.Results
-import io.omixer.rpm.inference.ScoringInference
-import io.omixer.rpm.io.DirectoryReader
-import io.omixer.rpm.io.InputFormat
-import io.omixer.rpm.io.MatrixReader
-import io.omixer.rpm.scoring.ComplexRule
-import io.omixer.rpm.scoring.Estimator
-import io.omixer.rpm.scoring.ScoringOptions
-import io.omixer.rpm.scoring.SharedKoResolution
+import io.omixer.rpm.database.CompiledDatabase
+import io.omixer.rpm.inference.CoverageCutoff
+import io.omixer.rpm.inference.Results
+import io.omixer.rpm.inference.scoring.ComplexRule
+import io.omixer.rpm.inference.scoring.Estimator
+import io.omixer.rpm.inference.scoring.ScoringInference
+import io.omixer.rpm.inference.scoring.ScoringOptions
+import io.omixer.rpm.inference.scoring.SharedKoResolution
+import io.omixer.rpm.profile.ProfilesBuilder
+import io.omixer.rpm.profile.reader.DirectoryReader
+import io.omixer.rpm.profile.reader.InputFormat
+import io.omixer.rpm.profile.reader.MatrixReader
 
 /**
  * The settings of a run in a spec, and the run itself: input read through the real readers and ProfilesBuilder, then

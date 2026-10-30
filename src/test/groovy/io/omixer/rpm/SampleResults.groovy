@@ -1,7 +1,7 @@
 package io.omixer.rpm
 
-import io.omixer.rpm.engine.ModuleResult
-import io.omixer.rpm.engine.Results
+import io.omixer.rpm.inference.ModuleResult
+import io.omixer.rpm.inference.Results
 
 /** The results of one sample */
 class SampleResults {

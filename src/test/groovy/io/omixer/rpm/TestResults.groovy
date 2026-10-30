@@ -1,11 +1,11 @@
 package io.omixer.rpm
 
-import io.omixer.rpm.cutoff.CoverageCutoff
-import io.omixer.rpm.cutoff.Cutoff
-import io.omixer.rpm.domain.ModuleDatabase
-import io.omixer.rpm.engine.CompiledDatabase
-import io.omixer.rpm.engine.ProfilesBuilder
-import io.omixer.rpm.engine.Results
+import io.omixer.rpm.database.CompiledDatabase
+import io.omixer.rpm.database.ModuleDatabase
+import io.omixer.rpm.inference.CoverageCutoff
+import io.omixer.rpm.inference.Cutoff
+import io.omixer.rpm.inference.Results
+import io.omixer.rpm.profile.ProfilesBuilder
 
 /** Results with chosen values, for the writer specs */
 class TestResults {

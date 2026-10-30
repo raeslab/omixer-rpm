@@ -4,8 +4,8 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 import io.omixer.rpm.inference.ModuleInference;
-import io.omixer.rpm.io.InputFormat;
-import io.omixer.rpm.io.OutputFormat;
+import io.omixer.rpm.output.OutputFormat;
+import io.omixer.rpm.profile.reader.InputFormat;
 
 /**
  * Everything a run needs.
