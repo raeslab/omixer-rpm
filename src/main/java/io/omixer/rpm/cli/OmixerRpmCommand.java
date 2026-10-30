@@ -192,7 +192,8 @@ public final class OmixerRpmCommand implements Callable<Integer> {
 		}
 		LOG.info("Total run time: " + (System.currentTimeMillis() - start) / 1000L);
 		LOG.info("Coverage cutoff: "
-				+ (results.cutoff().isPresent() ? results.cutoff().getAsDouble() : "none (no module observed)"));
+				+ (results.cutoff().value().isPresent() ? results.cutoff().value().getAsDouble()
+						: "none (no module observed)"));
 		LOG.info("Output files are in " + request.outputDir().toAbsolutePath());
 		return 0;
 	}

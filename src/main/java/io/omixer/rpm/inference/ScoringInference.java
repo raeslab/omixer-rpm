@@ -1,16 +1,13 @@
 package io.omixer.rpm.inference;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.OptionalDouble;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.IntConsumer;
 import java.util.stream.IntStream;
 
 import io.omixer.rpm.cutoff.CoverageCutoff;
-import io.omixer.rpm.cutoff.CoverageDistribution;
 import io.omixer.rpm.engine.CompiledDatabase;
 import io.omixer.rpm.engine.CompiledModule;
 import io.omixer.rpm.engine.Profiles;
@@ -22,7 +19,7 @@ import io.omixer.rpm.scoring.SharedKoResolution;
 
 /**
  * Infers modules by scoring: resolves shared KOs, scores every module of every profile with a {@link ModuleScorer},
- * then applies the coverage cutoff.
+ * then resolves the coverage cutoff from every observed coverage.
  */
 public final class ScoringInference implements ModuleInference {
 
@@ -48,14 +45,11 @@ public final class ScoringInference implements ModuleInference {
 	public Results infer(CompiledDatabase database, Profiles profiles) {
 		Profiles resolved = resolution.apply(profiles, database);
 		ModuleScorer scorer = new ModuleScorer(scoring);
-		int size = profiles.size();
-		int[][] observed = new int[size][];
-		double[][] abundance = new double[size][];
-		double[][] coverage = new double[size][];
-		// each profile fills its own slots, so profiles can be scored in parallel without locks
-		forEachProfile(size, profile -> {
+		List<CompiledModule> modules = database.modules();
+		Results.Builder results = Results.builder(profiles, modules.stream().map(CompiledModule::id).toList());
+		// each profile is given once, so profiles can be scored in parallel without locks
+		forEachProfile(profiles.size(), profile -> {
 			double[] values = resolved.values(profile);
-			List<CompiledModule> modules = database.modules();
 			int[] indexes = new int[modules.size()];
 			double[] abundances = new double[modules.size()];
 			double[] coverages = new double[modules.size()];
@@ -70,23 +64,10 @@ public final class ScoringInference implements ModuleInference {
 					count++;
 				}
 			}
-			observed[profile] = Arrays.copyOf(indexes, count);
-			abundance[profile] = Arrays.copyOf(abundances, count);
-			coverage[profile] = Arrays.copyOf(coverages, count);
+			results.profile(profile, Arrays.copyOf(indexes, count), Arrays.copyOf(abundances, count),
+					Arrays.copyOf(coverages, count));
 		});
-		List<String> moduleIds = database.modules().stream().map(CompiledModule::id).toList();
-		return switch (cutoff) {
-			case CoverageCutoff.Fixed(double value) ->
-				new Results(profiles, moduleIds, observed, abundance, coverage, OptionalDouble.of(value), null);
-			case CoverageCutoff.Automatic() -> {
-				CoverageDistribution distribution = new CoverageDistribution(observedCoverages(coverage));
-				yield distribution.findOptimalCoverage()
-						.map(learned -> new Results(profiles, moduleIds, observed, abundance, coverage,
-								OptionalDouble.of(learned), distribution))
-						.orElseGet(() -> new Results(profiles, moduleIds, observed, abundance, coverage,
-								OptionalDouble.empty(), null));
-			}
-		};
+		return results.build(cutoff.resolve(results.observedCoverages()));
 	}
 
 	private void forEachProfile(int size, IntConsumer action) {
@@ -100,16 +81,5 @@ public final class ScoringInference implements ModuleInference {
 		} finally {
 			pool.shutdown();
 		}
-	}
-
-	/** The coverage of every observed module in every profile */
-	private static List<Double> observedCoverages(double[][] coverage) {
-		List<Double> coverages = new ArrayList<>();
-		for (double[] profile : coverage) {
-			for (double value : profile) {
-				coverages.add(value);
-			}
-		}
-		return coverages;
 	}
 }

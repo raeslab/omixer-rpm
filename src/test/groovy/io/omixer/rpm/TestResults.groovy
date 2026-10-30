@@ -1,5 +1,7 @@
 package io.omixer.rpm
 
+import io.omixer.rpm.cutoff.CoverageCutoff
+import io.omixer.rpm.cutoff.Cutoff
 import io.omixer.rpm.domain.ModuleDatabase
 import io.omixer.rpm.engine.CompiledDatabase
 import io.omixer.rpm.engine.ProfilesBuilder
@@ -11,25 +13,26 @@ class TestResults {
 	/**
 	 * @param modules the module ids, in database order
 	 * @param values  sample → list of [taxon, module, abundance, coverage]; taxon null unless per taxon
+	 * @param cutoff  a given coverage cutoff
 	 */
 	static Results of(List<String> modules, Map<String, List<List>> values, boolean perTaxon, double cutoff) {
+		of(modules, values, perTaxon, new CoverageCutoff.Fixed(cutoff).resolve(new double[0]))
+	}
+
+	static Results of(List<String> modules, Map<String, List<List>> values, boolean perTaxon, Cutoff cutoff) {
 		def builder = new ProfilesBuilder(CompiledDatabase.compile(new ModuleDatabase([])), perTaxon)
 		values.each { sample, rows ->
 			builder.sample(sample)
 			rows.each { taxon, module, abundance, coverage -> builder.add(sample, taxon, "-", 0d) }
 		}
 		def profiles = builder.build()
-		int size = profiles.size()
-		int[][] observed = new int[size][]
-		double[][] abundance = new double[size][]
-		double[][] coverage = new double[size][]
-		(0..<size).each { p ->
+		def results = Results.builder(profiles, modules)
+		(0..<profiles.size()).each { p ->
 			def key = profiles.key(p)
 			def rows = values[key.sample()].findAll { it[0] == key.taxon() }.sort { modules.indexOf(it[1]) }
-			observed[p] = rows.collect { modules.indexOf(it[1]) } as int[]
-			abundance[p] = rows.collect { it[2] as double } as double[]
-			coverage[p] = rows.collect { it[3] as double } as double[]
+			results.profile(p, rows.collect { modules.indexOf(it[1]) } as int[], rows.collect { it[2] as double } as double[],
+					rows.collect { it[3] as double } as double[])
 		}
-		new Results(profiles, modules, observed, abundance, coverage, OptionalDouble.of(cutoff), null)
+		results.build(cutoff)
 	}
 }

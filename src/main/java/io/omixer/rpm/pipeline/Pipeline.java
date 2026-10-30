@@ -1,7 +1,6 @@
 package io.omixer.rpm.pipeline;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -11,13 +10,8 @@ import io.omixer.rpm.engine.CompiledDatabase;
 import io.omixer.rpm.engine.ProfilesBuilder;
 import io.omixer.rpm.engine.Results;
 import io.omixer.rpm.io.CoveragePlotWriter;
-import io.omixer.rpm.io.DirectoryReader;
-import io.omixer.rpm.io.MatrixReader;
-import io.omixer.rpm.io.MatrixWriter;
 import io.omixer.rpm.io.ModuleDatabaseReader;
-import io.omixer.rpm.io.PerSampleWriter;
 import io.omixer.rpm.io.ProfileReader;
-import io.omixer.rpm.io.ResultWriter;
 import io.omixer.utils.exceptions.IncorrectNumberOfEntriesException;
 
 /**
@@ -38,21 +32,15 @@ public final class Pipeline {
 		request.outputDir().toFile().mkdirs();
 		CompiledDatabase database = CompiledDatabase.compile(ModuleDatabaseReader.read(request.database()));
 		ProfilesBuilder profiles = new ProfilesBuilder(database, request.perTaxon());
-		ProfileReader reader = Files.isDirectory(request.input()) ? new DirectoryReader(request.format())
-				: new MatrixReader(request.format());
-		reader.read(request.input(), profiles);
+		ProfileReader.forInput(request.input(), request.format()).read(request.input(), profiles);
 		warnAboutNumericFunctions(profiles.numericFunctions());
 
 		Results results = request.inference().infer(database, profiles.build());
-		if (results.cutoff().isEmpty()) {
+		if (results.cutoff().value().isEmpty()) {
 			LOG.warn("No module was observed in any sample: no coverage cutoff can be learned and no module is reported");
 		}
-		ResultWriter writer = switch (request.output()) {
-			case PER_SAMPLE -> new PerSampleWriter();
-			case MATRIX -> new MatrixWriter();
-		};
 		new CoveragePlotWriter().write(results, request.outputDir());
-		writer.write(results, request.outputDir());
+		request.output().writer().write(results, request.outputDir());
 		return results;
 	}
 
