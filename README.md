@@ -50,7 +50,8 @@ Input files are TAB delimited matrices of KEGG KO annotated functional profiles.
 #### Database file format.
 The reference pathways database is a flat file where pathway/module reactions are listed following their order in the pathway.
 Tab-separated reactions indicate alternative reactions (OR operation), while return- and comma-separated reactions 
-are all required for process completeness (AND operation). Below is a snippet from the human gut metabolic modules (GMMs)
+are all required for process completeness (AND operation). Each module ends with a `///` line; a file in which no
+module does is rejected, and a last module without one is read with a warning. Below is a snippet from the human gut metabolic modules (GMMs)
 database, described in *[Vieira-Silva et al. 2016](https://www.nature.com/articles/nmicrobiol201688)*.
 <pre>
 MF0001	arabinoxylan degradation

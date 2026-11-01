@@ -30,7 +30,7 @@ public final class Pipeline {
 	public Results run(Request request) throws IOException, IncorrectNumberOfEntriesException {
 		// as 1.x: the output directory exists also when the input turns out to be wrong
 		request.outputDir().toFile().mkdirs();
-		CompiledDatabase database = CompiledDatabase.compile(ModuleDatabaseReader.read(request.database()));
+		CompiledDatabase database = CompiledDatabase.compile(ModuleDatabaseReader.read(request.database(), LOG::warn));
 		ProfilesBuilder profiles = new ProfilesBuilder(database, request.perTaxon());
 		ProfileReader.forInput(request.input(), request.format()).read(request.input(), profiles);
 		warnAboutNumericFunctions(profiles.numericFunctions());

@@ -25,7 +25,7 @@ class DirectoryInputSpec extends Specification {
 	def options
 
 	def setup() {
-		database = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module.list")))
+		database = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module.list"), {}))
 		options = new Settings()
 		options.setEstimator(new Estimator.Median())
 		options.setCoverage(0d)

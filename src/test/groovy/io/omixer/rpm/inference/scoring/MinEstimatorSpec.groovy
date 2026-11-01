@@ -19,7 +19,7 @@ class MinEstimatorSpec extends Specification {
 		def options = new Settings()
 		options.setEstimator(new Estimator.Min())
 		options.setCoverage(0d)
-		def database = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list")))
+		def database = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list"), {}))
 		options.infer(abundances.collect { ko, value -> Settings.row(null, ko, value) }, database)
 				.all().find { it.module() == "MF0007" }
 	}

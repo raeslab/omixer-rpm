@@ -12,10 +12,13 @@ class ModuleDatabaseReaderSpec extends Specification {
 	@TempDir
 	Path tmp
 
+	/** The warnings of the last read */
+	List<String> warnings = []
+
 	private ModuleDatabase read(String content) {
 		Path file = tmp.resolve("modules.list")
 		Files.writeString(file, content)
-		ModuleDatabaseReader.read(file)
+		ModuleDatabaseReader.read(file, { warnings << it })
 	}
 
 	/** The steps of a module as text: alternatives joined by |, subunits by + */
@@ -57,14 +60,46 @@ class ModuleDatabaseReaderSpec extends Specification {
 		steps(database.modules()[1]) == ["K2"]
 	}
 
-	def "the last module may end without ///"() {
+	def "the last module may end without ///, with a warning naming it"() {
 
-		when:
-		def database = read("M1\tfirst\nK1\n///\nM2\tsecond\nK2")
+		when: "as in GBMs.v1.0"
+		def database = read("M1\tfirst\nK1\n///\nM2\tsecond\nK2\n")
 
 		then:
 		database.modules()*.id() == ["M1", "M2"]
 		steps(database.modules()[1]) == ["K2"]
+		warnings == ["modules.list, line 4: the last module, 'M2', does not end with ///: if the file was cut off, modules are missing"]
+	}
+
+	def "a file in which no module ends with /// is rejected: it is not a module database"() {
+
+		when:
+		read(content)
+
+		then: "before, a matrix given as -d was read as one module, giving meaningless results"
+		ModuleFileFormatException e = thrown()
+		e.message == "modules.list: no module ends with ///, so it is not a module database (a module is a header ID<TAB>name, one line per step, then ///)"
+
+		where: "an abundance matrix, a single module without ///, an empty file"
+		content << ["entry\tS1\tS2\nK00001\t0.5\t1\nK00002\t2\t3\n", "M1\tfirst\nK1\n", ""]
+	}
+
+	def "function ids that read as numbers give a warning with up to three of them, in file order"() {
+
+		when:
+		read("M1\tfirst\nK1\t0.5\t12\n0.5\n1e-3\t7\n///\n")
+
+		then:
+		warnings == ["Some function ids in modules.list are numbers (e.g. 0.5, 12, 1e-3): please check that it is a module database (-d)"]
+	}
+
+	def "the GMM database gives no warning"() {
+
+		when:
+		ModuleDatabaseReader.read(Path.of("src/test/resources/module.list"), { warnings << it })
+
+		then:
+		warnings.isEmpty()
 	}
 
 	def "a module header without a name is rejected, reporting its line"() {
@@ -120,7 +155,7 @@ class ModuleDatabaseReaderSpec extends Specification {
 	def "the GMM database is read in database order"() {
 
 		when:
-		def modules = ModuleDatabaseReader.read(Path.of("src/test/resources/module.list")).modules()
+		def modules = ModuleDatabaseReader.read(Path.of("src/test/resources/module.list"), {}).modules()
 
 		then:
 		modules.size() == 121

@@ -33,7 +33,7 @@ class ComplexRuleScoringSpec extends Specification {
 		options.setComplexRule(rule)
 		options.setNormalizeByLength(normalize)
 		options.setCoverage(0d)
-		def modules = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/golden/inputs/edge/edge-modules.list")))
+		def modules = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/golden/inputs/edge/edge-modules.list"), {}))
 		options.infer(abundances.collect { ko, value -> Settings.row(null, ko, value) }, modules)
 				.all().find { it.module() == module }
 	}

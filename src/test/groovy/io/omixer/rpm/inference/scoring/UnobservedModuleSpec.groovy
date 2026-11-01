@@ -20,7 +20,7 @@ class UnobservedModuleSpec extends Specification {
 		options.setEstimator(estimator)
 		options.setNormalizeByLength(normalize)
 		options.setCoverage(0d)
-		def database = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list")))
+		def database = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list"), {}))
 
 		when:
 		ModuleResult module = options.infer([Settings.row(null, "K00001", 2d)], database)

@@ -29,7 +29,7 @@ class MatrixInputSpec extends Specification {
 		matrix.text = "entry\tS1\tS2\tS1\nK00001\t1\t2\t3\n"
 
 		when:
-		options.inferSamples(matrix, InputFormat.KO, CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list"))))
+		options.inferSamples(matrix, InputFormat.KO, CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list"), {})))
 
 		then: "before, the values of both S1 columns were silently added together"
 		DuplicateColumnException e = thrown()
@@ -47,7 +47,7 @@ class MatrixInputSpec extends Specification {
 
 		when:
 		options.inferSamples(matrix, annotation,
-				CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list"))))
+				CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list"), {})))
 
 		then: "before, a raw NumberFormatException with no file or line"
 		InputFormatException e = thrown()

@@ -18,7 +18,7 @@ class ScoringInferenceSpec extends Specification {
 	def options
 	
 	def setup() {
-		database = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list")))
+		database = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list"), {}))
 		options = new Settings()
 		options.setCoverage(0.66)
 		options.setNormalizeByLength(false)

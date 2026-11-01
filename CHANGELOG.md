@@ -37,6 +37,10 @@ catches an exception for every non-numeric id). `-t` now uses its own thread poo
 - **B29** Per-taxon matrix output (`-e 2`): a taxon and a module whose names join to the same text as another pair
   (taxon `A` + module `BM1`, taxon `AB` + module `M1`) keep their own values. Before, both pairs shared one cell, so
   one of them was written as 0.0. GMM and KEGG module ids can't produce this.
+- **B30** A file in which no module ends with `///` (e.g. an abundance matrix given as `-d` by mistake) stops the run
+  with "<file>: no module ends with ///, so it is not a module database" (exit code 1). Before, it was read as one
+  module and gave meaningless results. A last module without `///` is still read (GBMs.v1.0 ends that way), now with a
+  warning in case the file was cut off, and function ids in the database that read as numbers give a warning.
 
 ## 1.2.1 (2026-10-28)
 

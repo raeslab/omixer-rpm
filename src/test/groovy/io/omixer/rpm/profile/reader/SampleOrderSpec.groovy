@@ -21,7 +21,7 @@ class SampleOrderSpec extends Specification {
 	def options
 
 	def setup() {
-		database = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list")))
+		database = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module-inference.list"), {}))
 		options = new Settings()
 		options.setEstimator(new Estimator.Median())
 		options.setCoverage(0d)

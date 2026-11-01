@@ -117,6 +117,22 @@ class CommandLineSpec extends Specification {
 		["-i", "no-such-input.tsv", "-d", DATABASE]                               | "no-such-input.tsv (No such file or directory)"
 		["-i", MATRIX, "-d", "no-such-database.list"]                             | "no-such-database.list (No such file or directory)"
 		["-i", "src/test/resources/empty-matrix.tsv", "-d", DATABASE]             | "empty-matrix.tsv is empty: a matrix starts with a header line"
+		// an abundance matrix given as the module database
+		["-i", MATRIX, "-d", MATRIX]                                              | "matrix.tsv: no module ends with ///, so it is not a module database (a module is a header ID<TAB>name, one line per step, then ///)"
+	}
+
+	def "a module database whose last module does not end with /// is read, with a warning"() {
+
+		given: "the GMMs without the last ///, as GBMs.v1.0 ends"
+		File database = new File(tempDir, "modules.list")
+		database.text = new File(DATABASE).text.replaceFirst(/\/\/\/\s*$/, "")
+
+		when:
+		int status = run(["-i", MATRIX, "-d", database.path])
+
+		then:
+		status == 0
+		problems() == ["WARN modules.list, line 571: the last module, 'MF0121', does not end with ///: if the file was cut off, modules are missing"]
 	}
 
 	def "an input where no module is observed reports none, with a warning and no coverage plot"() {

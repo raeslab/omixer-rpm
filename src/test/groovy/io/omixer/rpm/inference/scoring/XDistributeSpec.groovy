@@ -25,7 +25,7 @@ class XDistributeSpec extends Specification {
 	def options
 
 	def setup() {
-		database = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/xdistribute-modules.list")))
+		database = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/xdistribute-modules.list"), {}))
 		options = new Settings()
 		options.setEstimator(new Estimator.Median())
 		options.setCoverage(0d)
@@ -96,7 +96,7 @@ class XDistributeSpec extends Specification {
 		and: "each taxon's results equal a separate run on that taxon's data"
 		taxa.every { taxon, abundances ->
 			options.setPerTaxon(false)
-			Map<String, ModuleResult> alone = byId(options.infer(features(taxon, abundances), CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/xdistribute-modules.list")))))
+			Map<String, ModuleResult> alone = byId(options.infer(features(taxon, abundances), CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/xdistribute-modules.list"), {}))))
 			perTaxon.all().findAll { it.taxon() == taxon }.every {
 				it.abundance() == alone[it.module()].abundance() && it.coverage() == alone[it.module()].coverage()
 			}
@@ -106,7 +106,7 @@ class XDistributeSpec extends Specification {
 	def "per-taxon --Xdistribute on the legacy taxon matrix reports every taxon and yields an automatic cutoff"() {
 
 		setup:
-		def gmms = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module.list")))
+		def gmms = CompiledDatabase.compile(ModuleDatabaseReader.read(Path.of("src/test/resources/module.list"), {}))
 		options.setPerTaxon(true)
 		options.setCoverage(-1d)
 
