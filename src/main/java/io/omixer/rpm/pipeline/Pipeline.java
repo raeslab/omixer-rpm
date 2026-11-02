@@ -15,7 +15,14 @@ import io.omixer.rpm.profile.reader.ProfileReader;
 import io.omixer.utils.exceptions.IncorrectNumberOfEntriesException;
 
 /**
- * A run: reads the module database and the input, infers the modules and writes the results.
+ * A run: reads the module database and the input, infers the modules and writes the results. In order:
+ * <ol>
+ * <li>the module database is read and compiled (orthologs become indexes);</li>
+ * <li>whether profiles are per taxon is decided before reading (a HUMAnN table without strata is per sample);</li>
+ * <li>the reader feeds every input value to the profiles builder (for HUMAnN through its row selection);</li>
+ * <li>the inference method gives the results and the coverage cutoff;</li>
+ * <li>the coverage plot (automatic cutoff only) and the result files are written.</li>
+ * </ol>
  */
 public final class Pipeline {
 

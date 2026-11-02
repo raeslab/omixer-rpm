@@ -16,7 +16,8 @@ import io.omixer.rpm.profile.Profiles;
 
 /**
  * Infers modules by scoring: resolves shared KOs, scores every module of every profile with a {@link ModuleScorer},
- * then resolves the coverage cutoff from every observed coverage.
+ * then resolves the coverage cutoff from every observed coverage. Profiles are independent: with -t they are scored
+ * in parallel in a pool of their own, each writing only its own results, so the results do not depend on -t.
  */
 public final class ScoringInference implements ModuleInference {
 

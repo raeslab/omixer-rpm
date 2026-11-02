@@ -29,13 +29,18 @@ public final class ModuleScorer {
 	}
 
 	/**
-	 * @param values the KO values of one profile, indexed by the KO indexes of the module's database
+	 * @param values the values of one profile, indexed by the ortholog indexes of the module's database (0 when not
+	 *               observed)
+	 * @return the coverage and abundance of the module's best path
 	 */
 	public ModuleScore score(CompiledModule module, double[] values) {
 		return allFiniteAndNonNegative(module, values) ? scorePerStep(module, values) : scoreAllPaths(module, values);
 	}
 
-	/** Each step takes its observed alternative with the highest value, the first one on ties */
+	/**
+	 * Each step takes its observed alternative with the highest value (min: the highest smallest present ortholog), the
+	 * first one on ties. A step with no observed alternative keeps alternative 0, which is unobserved too.
+	 */
 	ModuleScore scorePerStep(CompiledModule module, double[] values) {
 		// path[step] = the chosen alternative
 		int[] path = new int[module.stepCount()];
@@ -171,6 +176,7 @@ public final class ModuleScorer {
 		return new ModuleScore(present ? abundance : 0d, observedSteps / length);
 	}
 
+	/** Whether an alternative is observed: its orthologs with a value &gt; 0, judged by the complex rule */
 	private boolean isObserved(CompiledModule module, int step, int alternative, double[] values) {
 		int orthologs = module.orthologCount(step, alternative);
 		int present = 0;

@@ -19,7 +19,7 @@ public sealed interface Estimator {
 	record Sum() implements Estimator {
 	}
 
-	/** The smallest present KO of the observed steps; -n does not apply */
+	/** The smallest present ortholog (value &gt; 0) of the observed steps; -n does not apply */
 	record Min() implements Estimator {
 	}
 }

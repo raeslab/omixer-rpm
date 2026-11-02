@@ -52,6 +52,7 @@ final class SVGDevice {
 		});
 	}
 
+	/** A line of the plot, in drawing area coordinates (origin at the top left) */
 	void drawLine(double x1, double y1, double x2, double y2) {
 		drawLine(x1, y1, x2, y2, LINE_STYLE);
 	}
@@ -62,6 +63,7 @@ final class SVGDevice {
 				.append(Constants.NEW_LINE);
 	}
 
+	/** A point of the plot, in drawing area coordinates */
 	void drawCircle(double x, double y, double r, String fill) {
 		svg.append("<circle cx=\"").append(x).append("\" cy=\"").append(y).append("\" r=\"").append(r)
 				.append("\" style=\"stroke:steelblue;stroke-width:2\" fill=\"").append(fill).append("\"/>")

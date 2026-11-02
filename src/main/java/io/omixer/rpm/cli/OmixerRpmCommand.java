@@ -177,6 +177,12 @@ public final class OmixerRpmCommand implements Callable<Integer> {
 		return exception.getMessage();
 	}
 
+	/**
+	 * Runs picocli's parsed options: an invalid option gives {@link #EXIT_USAGE} and the help, an input or run error
+	 * {@link #EXIT_ERROR}, both with the message logged
+	 *
+	 * @return the exit status
+	 */
 	@Override
 	public Integer call() {
 		Request request;

@@ -44,6 +44,10 @@ public final class ProfilesBuilder implements ProfileSink {
 		this.perTaxon = perTaxon;
 	}
 
+	/**
+	 * Per sample, a sample gets its profile now, so that it has one (scored 0) even without values. Per taxon, profiles
+	 * are made by the values: a sample without values has no profile, but is still a sample of the results.
+	 */
 	@Override
 	public void sample(String sample) {
 		Map<String, Observations> profiles = samples.computeIfAbsent(sample, s -> new HashMap<>());
@@ -52,6 +56,10 @@ public final class ProfilesBuilder implements ProfileSink {
 		}
 	}
 
+	/**
+	 * Every value makes its profile exist (sample, and taxon when per taxon; per sample the taxon is dropped, so the
+	 * values of all taxa are summed). Only a non-zero value of a database ortholog is stored.
+	 */
 	@Override
 	public void add(String sample, String taxon, String function, double value) {
 		if (numericFunctions.size() < NUMERIC_FUNCTION_EXAMPLES && checkedFunctions.add(function)
@@ -75,6 +83,10 @@ public final class ProfilesBuilder implements ProfileSink {
 		return List.copyOf(numericFunctions);
 	}
 
+	/**
+	 * @return the profiles: samples in input order, the profiles of a sample together (taxa in HashMap order), each
+	 *         with one value per ortholog, ascending by ortholog index
+	 */
 	public Profiles build() {
 		List<ProfileKey> keys = new ArrayList<>();
 		List<int[]> kos = new ArrayList<>();

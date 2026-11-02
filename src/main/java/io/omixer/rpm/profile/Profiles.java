@@ -43,10 +43,12 @@ public final class Profiles {
 		return samples;
 	}
 
+	/** @return the number of profiles; a profile is identified by its position, from 0 */
 	public int size() {
 		return keys.size();
 	}
 
+	/** @return the sample (and taxon) of a profile */
 	public ProfileKey key(int profile) {
 		return keys.get(profile);
 	}
