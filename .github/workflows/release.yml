@@ -1,0 +1,49 @@
+# Releases a version tag (v2.0.0, v2.0.0-rc.1, ...): builds and tests it (build.yml), then creates the GitHub
+# release with the jar that passed. The tag must match the version in build.gradle; a version with a '-' (rc, beta)
+# is marked as a pre-release.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check the tag
+        run: |
+          version=$(sed -n "s/^version = '\(.*\)'$/\1/p" build.gradle)
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match version '$version' in build.gradle"
+            exit 1
+          fi
+          case "$version" in
+            *SNAPSHOT*) echo "A SNAPSHOT version is not released"; exit 1 ;;
+          esac
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: jar
+          path: jar
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          prerelease=
+          case "$GITHUB_REF_NAME" in *-*) prerelease=--prerelease ;; esac
+          gh release create "$GITHUB_REF_NAME" jar/*-all.jar --verify-tag $prerelease \
+            --title "Omixer-RPM ${GITHUB_REF_NAME#v}" --notes "Changes: see CHANGELOG.md. Requires Java 21 or newer."
