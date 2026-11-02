@@ -8,3 +8,4 @@
 /gradlew.bat
 /.settings/
 /src/test/resources/golden/reference/
+/.idea/

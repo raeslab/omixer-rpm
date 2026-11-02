@@ -3,7 +3,7 @@ package io.omixer.rpm.golden
 import java.nio.file.Files
 
 import io.omixer.rpm.LogCapture
-import io.omixer.rpm.core.InferenceApp
+import io.omixer.rpm.cli.OmixerRpmCommand
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Tag
@@ -47,7 +47,8 @@ class GoldenSpec extends Specification {
 		taxonInput("edge-taxon", ["-i", GOLDEN_IN + "/edge/edge-taxon-matrix.tsv", "-d", EDGE_DB, "-a", "2"])
 		INPUTS["synth-matrix"] = ["-i", GOLDEN_IN + "/synthetic/synth-matrix.tsv", "-d", GMM_DB, "-a", "1"]
 		taxonInput("synth-taxon", ["-i", GOLDEN_IN + "/synthetic/synth-taxon-matrix.tsv", "-d", GMM_DB, "-a", "2"])
-		// -a h2 is added once the HUMAnN 3/4 input is settled: synthetic/synth-humann2.tsv
+		// HUMAnN 3 KO table of the same community, with an unclassified stratum added to some KOs
+		taxonInput("synth-humann", ["-i", GOLDEN_IN + "/synthetic/synth-humann.tsv", "-d", GMM_DB, "-a", "humann"])
 	}
 
 	/** Directory inputs, each written from one of the matrices: name: [matrix input, arguments] */
@@ -179,6 +180,39 @@ class GoldenSpec extends Specification {
 		[directory, variant] << [DIRECTORIES.keySet(), ["median", "min_n", "xd_sum"]].combinations()
 	}
 
+	def "a HUMAnN table per taxon: every taxon but unclassified gives the results of the taxon matrix (#variant)"() {
+
+		given:
+		def humann = abundance("synth-humann", variant).findAll { key, values -> !key.startsWith("unclassified\t") }
+		def humannCoverage = coverage("synth-humann", variant).findAll { key, values -> !key.startsWith("unclassified\t") }
+
+		expect:
+		humann == abundance("synth-taxon", variant)
+		humannCoverage == coverage("synth-taxon", variant)
+
+		where:
+		variant << ["median", "min_n", "xd_sum", "all_average"]
+	}
+
+	def "a HUMAnN table gives the results of its rows as matrices: totals per sample (-a 1), strata per taxon (-a 2) (#variant)"() {
+
+		given:
+		def matrices = Files.createTempDirectory("golden-humann").toFile()
+		def (totals, strata) = humannMatrices(new File(GOLDEN_IN + "/synthetic/synth-humann.tsv"), matrices)
+		def community = run(["-i", totals.path, "-d", GMM_DB, "-a", "1"] + VARIANTS[variant] + ["-c", "0", "-e", "2"])
+		def perTaxon = run(["-i", strata.path, "-d", GMM_DB, "-a", "2"] + VARIANTS[variant] + ["-c", "0", "-e", "2"])
+		matrices.deleteDir()
+
+		expect:
+		abundance(community) == abundance("synth-humann-community", variant)
+		coverage(community) == coverage("synth-humann-community", variant)
+		abundance(perTaxon) == abundance("synth-humann", variant)
+		coverage(perTaxon) == coverage("synth-humann", variant)
+
+		where:
+		variant << ["median", "xd_median", "all_median"]
+	}
+
 	def "every recorded reference belongs to an input"() {
 
 		expect:
@@ -210,6 +244,30 @@ class GoldenSpec extends Specification {
 		input.endsWith("-community") ? ["median", "xd_median", "all_median"] : VARIANTS.keySet().toList()
 	}
 
+	/**
+	 * Writes the rows of a HUMAnN table as two matrices in a directory, special rows left out, KO names and the
+	 * columns' _Abundance suffix removed: the totals (-a 1) and the strata (-a 2)
+	 */
+	private static List<File> humannMatrices(File table, File directory) {
+		def lines = table.readLines("UTF-8")
+		def samples = lines[0].split("\t").drop(1).collect { it.replaceFirst(/_Abundance(-[A-Za-z]+)?$/, "") }
+		def totals = ["KO\t" + samples.join("\t")]
+		def strata = ["Taxon\tKO\t" + samples.join("\t")]
+		lines.drop(1).each { line ->
+			int tab = line.indexOf("\t")
+			def (function, taxon) = (line.substring(0, tab).split("\\|", 2) as List) + [null]
+			function = function.split(": ")[0]
+			if (!(function in ["UNMAPPED", "READS_UNMAPPED", "UNGROUPED", "UNINTEGRATED"])) {
+				(taxon == null ? totals : strata) << (taxon == null ? "" : taxon + "\t") + function + line.substring(tab)
+			}
+		}
+		[[totals, "totals.tsv"], [strata, "strata.tsv"]].collect { rows, name ->
+			def file = new File(directory, name)
+			file.text = rows.collect { it + "\n" }.join()
+			file
+		}
+	}
+
 	/** Runs the command line in this JVM (once per arguments), returns its output files and log */
 	private Map run(List<String> args) {
 		runs.computeIfAbsent(args*.toString()) { execute(it) }
@@ -218,7 +276,7 @@ class GoldenSpec extends Specification {
 	private Map execute(List<String> args) {
 		def outputDir = new File(Files.createTempDirectory("golden").toFile(), "out")
 		logCapture.lines.clear()
-		int status = InferenceApp.run((args + ["-o", outputDir.path]) as String[])
+		int status = OmixerRpmCommand.run((args + ["-o", outputDir.path]) as String[])
 		def log = new ArrayList<>(logCapture.lines)
 		assert status == 0: "${args.join(' ')} exited with ${status}: ${log}"
 		def files = outputDir.listFiles().collectEntries { [it.name, it.name.endsWith(".svg") ? "" : it.getText("UTF-8")] }
