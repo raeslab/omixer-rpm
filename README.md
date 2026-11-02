@@ -129,7 +129,7 @@ The two possible combinations are:
 A) K00844 (10) -> K13810 (8) -> K01622 (2) -> K16370 (5) -> NA
 B) K00845 (3)  -> K06859 (7) -> K01622 (2) -> K16370 (5) -> NA
 </pre>
-The coverage in this case is 4/5 but the average in A (25/5) is greater than in B (17/5), therefore the selected path is A and the abundance of the module is 5.
+The coverage in this case is 4/5 but the steps of A (sum 25) are more abundant than those of B (sum 17), therefore the selected path is A. With `-s average -n` (sum ÷ the module's 5 steps), its abundance is 25/5 = 5; with the default median estimator it is 6.5 (median of 10, 8, 5 and 2).
 
 #### Using in R
 The [omixer-rpmR](https://github.com/omixer/omixer-rpmR) library is available for seamless integration with R.

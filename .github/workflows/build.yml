@@ -1,10 +1,14 @@
-# Builds every push and pull request: unit tests, golden tests and javadoc. The benchmark (gradle benchmark) stays
-# manual: its time limits need the same machine for both jars.
+# Builds every push to a branch and every pull request: unit tests, golden tests and javadoc; also run by
+# release.yml for a version tag. The benchmark (gradle benchmark) stays manual: its time limits need the same machine
+# for both jars.
 name: Build
 
 on:
   push:
+    # tags are built by release.yml
+    branches: ['**']
   pull_request:
+  workflow_call:
 
 permissions:
   contents: read
@@ -34,3 +38,11 @@ jobs:
         with:
           name: test-reports
           path: build/reports/tests/
+
+      # the jar that passed the tests, attached to the release by release.yml
+      - name: Jar
+        uses: actions/upload-artifact@v7
+        with:
+          name: jar
+          path: build/libs/*-all.jar
+          retention-days: 7

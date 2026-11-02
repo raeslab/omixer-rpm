@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (2.0.0)
+## 2.0.0-rc.1 (2026-11-02)
 
 Rewritten internals (see `REFACTORING.md`) with the same results as 1.2.1: every golden case and every matrix of
 the benchmark is identical, bit for bit. Only the items under "Fixed" change an output.
