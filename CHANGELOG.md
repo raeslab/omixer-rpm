@@ -23,6 +23,16 @@ observed values, the matrix writer no longer searches every result list, and the
 wrong `-a`) runs once per id instead of once per value (since commons-lang3 3.21, used from 1.2 on, it throws and
 catches an exception for every non-numeric id). `-t` now uses its own thread pool instead of the JVM-wide one.
 
+### Added
+- **HUMAnN input** (`-a humann`): HUMAnN gene families regrouped to KOs (`humann_regroup_table --groups uniref90_ko`),
+  as one table (per-sample tables joined with `humann_join_tables`). A stratified table gives results per taxon
+  from its strata (`KO|taxon`, `unclassified` included), or with `--ignore-taxonomic-info` per sample from its
+  community totals; a table of community totals only gives results per sample. Totals and strata are never added together. Special rows (`UNMAPPED`, `UNGROUPED`, …)
+  are skipped, KO names (`humann_rename_table`) are ignored, and sample names drop HUMAnN's `_Abundance` suffix
+  (`S1_Abundance-RPKs` → `S1`). No other output changes. It replaces the HUMAnN 2 parser of the 2018 development branch (`-a h2`), which
+  no release offered: it ignored `--ignore-taxonomic-info`, reported the community totals as a taxon `NA` and
+  crashed on directories.
+
 ### Changed
 - The command line is parsed with picocli instead of commons-cli: same options, defaults, error messages and exit
   codes. The help text has a new layout. An option given twice now takes the **last** value (1.x: the first).
@@ -88,7 +98,6 @@ Compared with 1.1. Unless an item under "Changed results" applies, 1.2 gives the
   isn't a sample stops the run with an error naming the file. Before: a crash or a misleading message, and a hidden
   file was read as a sample with an empty name.
 - **B17** `-c` values outside 0–1 (other than -1 for automatic), including `NaN`, are rejected.
-
 ### Fixed — crashes and error messages
 - **B10** Per-taxon `--Xdistribute` no longer crashes with a misleading "wrong --annotation" error.
 - **B11** A blank line after a `///` (at the end of the module database, or between modules) no longer crashes the run.

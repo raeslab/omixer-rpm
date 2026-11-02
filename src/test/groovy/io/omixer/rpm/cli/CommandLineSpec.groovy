@@ -9,6 +9,7 @@ class CommandLineSpec extends Specification {
 
 	private static final String MATRIX = "src/test/resources/matrix.tsv"
 	private static final String TAXON_MATRIX = "src/test/resources/taxon_matrix.tsv"
+	private static final String HUMANN = "src/test/resources/humann2KoTaxa.tsv"
 	private static final String DATABASE = "src/test/resources/module.list"
 	private static final String EDGE = "src/test/resources/golden/inputs/edge"
 
@@ -64,7 +65,10 @@ class CommandLineSpec extends Specification {
 			["-i", MATRIX, "-d", DATABASE, "--cov", "0.5", "-o", "OUT"],
 			["-i", MATRIX, "-d", DATABASE, "--coverage=0.5", "-o", "OUT"],
 			["-i", MATRIX, "-d", DATABASE, "-n", "-n", "-o", "OUT"],
-			["-i", MATRIX, "-d", DATABASE, "extra", "-o", "OUT"]
+			["-i", MATRIX, "-d", DATABASE, "extra", "-o", "OUT"],
+			// a HUMAnN KO table, per taxon and per sample
+			["-i", HUMANN, "-d", DATABASE, "-a", "humann", "-o", "OUT"],
+			["-i", HUMANN, "-d", DATABASE, "-a", "humann", "--ignore-taxonomic-info", "-o", "OUT"]
 		]
 	}
 
@@ -133,6 +137,84 @@ class CommandLineSpec extends Specification {
 		then:
 		status == 0
 		problems() == ["WARN modules.list, line 571: the last module, 'MF0121', does not end with ///: if the file was cut off, modules are missing"]
+	}
+
+	/**
+	 * A HUMAnN table with only the community totals, as humann_split_stratified_table writes it (*_unstratified.tsv):
+	 * the HUMAnN 2 test table without its function|taxon rows. It keeps the header, UNMAPPED, UNGROUPED and one total
+	 * row per KO.
+	 */
+	private File totalsOnlyTable() {
+		File table = new File(tempDir, "ko.tsv")
+		table.text = new File(HUMANN).readLines().findAll { !it.contains("|") }.join("\n")
+		table
+	}
+
+	def "a HUMAnN table with only community totals has no taxa: it is read per sample, saying so"() {
+
+		when: "without --ignore-taxonomic-info"
+		int status = run(["-i", totalsOnlyTable().path, "-d", DATABASE, "-a", "humann", "-e", "1"])
+
+		then: "per-sample files without a taxon column, and an INFO line on why"
+		status == 0
+		log.lines.contains("INFO ko.tsv has no stratified rows (function|taxon): one profile per sample")
+		new File(outputDir(), "10776.Healthy.modules").readLines()[0] == "Module\tValue\tCoverage"
+	}
+
+	def "a HUMAnN table with only community totals is read per sample, as a KO matrix (-a 1) of the same rows (#options)"() {
+
+		given:
+		File table = totalsOnlyTable()
+
+		when: "read as HUMAnN: per sample, with or without --ignore-taxonomic-info"
+		int status = run(["-i", table.path, "-d", DATABASE, "-a", "humann", "-c", "0", "-e", "2"] + options)
+		def humann = outputFiles().collectEntries { [it, new File(outputDir(), it).text] }
+		def humannProblems = problems()
+
+		and: "the same file read as a plain KO matrix: its UNMAPPED and UNGROUPED rows are KOs of no module there"
+		outputDir().deleteDir()
+		log.lines.clear()
+		run(["-i", table.path, "-d", DATABASE, "-a", "1", "-c", "0", "-e", "2"])
+		def matrix = outputFiles().collectEntries { [it, new File(outputDir(), it).text] }
+
+		then: "the same module matrices, with something observed, and the same warnings"
+		status == 0
+		humann.keySet() == ["modules-coverage.tsv", "modules.tsv"] as Set
+		humann == matrix
+		humann["modules.tsv"].readLines().size() > 1
+		humannProblems == problems()
+
+		where:
+		options << [[], ["--ignore-taxonomic-info"]]
+	}
+
+	def "a directory is an input error with -a humann, which reads one joined table (#options)"() {
+
+		given: "a directory with a HUMAnN table"
+		File directory = new File(tempDir, "tables")
+		directory.mkdirs()
+		new File(directory, "a.tsv").text = new File(HUMANN).text
+
+		expect: "per taxon and per sample"
+		run(["-i", directory.path, "-d", DATABASE, "-a", "humann"] + options) == 1
+		problems() == ["ERROR Exception while reading input data: tables is a directory: -a humann reads one HUMAnN table (join per-sample tables with humann_join_tables)"]
+		outputFiles() == []
+
+		where:
+		options << [[], ["--ignore-taxonomic-info"]]
+	}
+
+	def "HUMAnN per-sample files are named after the samples, with a taxon column only per taxon (#options)"() {
+
+		expect:
+		run(["-i", HUMANN, "-d", DATABASE, "-a", "humann", "-c", "0"] + options) == 0
+		outputFiles().size() == 9
+		new File(outputDir(), "10776.Healthy.modules").readLines()[0] == header
+
+		where:
+		options                     | header
+		[]                          | "Module\tTaxon\tValue\tCoverage"
+		["--ignore-taxonomic-info"] | "Module\tValue\tCoverage"
 	}
 
 	def "an input where no module is observed reports none, with a warning and no coverage plot"() {

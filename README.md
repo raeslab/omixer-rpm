@@ -12,6 +12,7 @@ An option's value can also follow it after a space (`-c 0.5`), as in 1.x.
   -a, --annotation=ANNOTATION
                             Input file annotation.
                             Use 1 for orthologs only files or 2 for taxonomic annotation followed by orthologs.
+                            Use humann for HUMAnN gene families regrouped to KOs (humann_regroup_table), with or without strata (KO|taxon).
                             Defaults to 1
   -c, --coverage=COVERAGE   The minimum coverage cut-off to accept a module [0.0 to 1.0].
                             Defaults to -1, where the coverage is learned from the coverage distribution of all modules
@@ -26,7 +27,7 @@ An option's value can also follow it after a space (`-c 0.5`), as in 1.x.
                             Use 1 for single tab separated files containing module id, abundance and coverage. Use 2 for an abundance and a coverage matrices.
                             Defaults to 1.
   -h, --help                Show this help message and exit
-  -i, --input=PATH          Path to the input matrix or input directory with one headerless file per sample
+  -i, --input=PATH          Path to the input matrix or input directory with one headerless file per sample (-a humann: one table)
       --ignore-taxonomic-info
                             Ignore taxonomic info from input file and infer modules for the whole metagenome instead
   -n, --normalize-by-length Divide module score by its length. When combined with a median estimator, missing reactions (score = 0 )
@@ -46,6 +47,25 @@ An option's value can also follow it after a space (`-c 0.5`), as in 1.x.
 
 #### Input file format.
 Input files are TAB delimited matrices of KEGG KO annotated functional profiles. An optional taxonomic annotation could also be included. For examples please refer to [KO matrix](https://github.com/raeslab/omixer-rpm/blob/master/src/test/resources/matrix.tsv) and [Taxon KO matrix](https://github.com/raeslab/omixer-rpm/blob/master/src/test/resources/taxon_matrix.tsv).
+
+#### HUMAnN input.
+With `-a humann`, the input is a [HUMAnN](https://github.com/biobakery/humann) (3, or 2) gene family table regrouped to KOs,
+optionally renormalized and joined:
+<pre>
+humann_regroup_table --input S1_genefamilies.tsv --groups uniref90_ko --output S1_ko.tsv
+humann_renorm_table --input S1_ko.tsv --units cpm --output S1_ko_cpm.tsv
+humann_join_tables --input tables/ --output ko.tsv --file_name ko_cpm
+java -jar omixer-rpm.jar -a humann -i ko.tsv -d GMMs.txt -o out
+</pre>
+The input is one table: per-sample tables are joined with `humann_join_tables` first (a directory is rejected). A
+stratified table (with `KO|taxon` rows, the HUMAnN default) gives results per taxon (from the `KO|taxon` rows only, HUMAnN's `unclassified` included), or with
+`--ignore-taxonomic-info` per sample (from the community `KO` rows only; a table with strata only, from
+`humann_split_stratified_table`, is summed over its strata). A table with community totals only (`humann
+--remove-stratified-output`, or the unstratified half of `humann_split_stratified_table`) gives results per sample, as
+with `-a 1`. Rows such as `UNMAPPED` and
+`UNGROUPED` are skipped, KO names added by `humann_rename_table` are ignored, and sample names drop HUMAnN's
+`_Abundance` suffix (`S1_Abundance-RPKs` gives `S1`). A KO name must not contain `|`: it would be read as the start of a
+stratum.
 
 #### Database file format.
 The reference pathways database is a flat file where pathway/module reactions are listed following their order in the pathway.

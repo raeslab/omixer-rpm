@@ -18,7 +18,8 @@ import io.omixer.utils.readers.FileLine;
 
 /**
  * Reads a directory with one headerless file per sample, in file name order. A row is KO&lt;TAB&gt;abundance for
- * {@link InputFormat#KO}, taxon&lt;TAB&gt;KO&lt;TAB&gt;abundance otherwise (HUMAnN files included, BUGS.md B14).
+ * {@link InputFormat#KO}, taxon&lt;TAB&gt;KO&lt;TAB&gt;abundance for {@link InputFormat#TAXON_KO}; HUMAnN tables have their
+ * own reader ({@link HumannReader}).
  * Sub-directories and hidden files (e.g. .DS_Store) are skipped; any other file must be a sample.
  */
 public final class DirectoryReader implements ProfileReader {

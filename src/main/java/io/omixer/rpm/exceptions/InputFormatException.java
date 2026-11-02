@@ -21,6 +21,13 @@ public class InputFormatException extends OmixerRpmException {
 		super(line.file() + ", line " + line.number() + ": '" + shorten(line.text()) + "' is not " + expected, cause);
 	}
 
+	/**
+	 * @param message what is wrong with the input as a whole, naming the file
+	 */
+	public InputFormatException(String message) {
+		super(message);
+	}
+
 	private static String shorten(String text) {
 		return text.length() <= MAX_LINE_LENGTH ? text : text.substring(0, MAX_LINE_LENGTH) + "...";
 	}

@@ -31,8 +31,13 @@ public final class Pipeline {
 		// as 1.x: the output directory exists also when the input turns out to be wrong
 		request.outputDir().toFile().mkdirs();
 		CompiledDatabase database = CompiledDatabase.compile(ModuleDatabaseReader.read(request.database(), LOG::warn));
-		ProfilesBuilder profiles = new ProfilesBuilder(database, request.perTaxon());
-		ProfileReader.forInput(request.input(), request.format()).read(request.input(), profiles);
+		boolean perTaxon = ProfileReader.perTaxon(request.input(), request.format(), request.perTaxon());
+		if (request.perTaxon() && !perTaxon) {
+			LOG.info(request.input().getFileName() + " has no stratified rows (function|taxon): one profile per sample");
+		}
+		ProfilesBuilder profiles = new ProfilesBuilder(database, perTaxon);
+		ProfileReader.forInput(request.input(), request.format())
+				.read(request.input(), ProfileReader.selection(request.input(), request.format(), perTaxon, profiles));
 		warnAboutNumericFunctions(profiles.numericFunctions());
 
 		Results results = request.inference().infer(database, profiles.build());

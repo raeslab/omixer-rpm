@@ -17,7 +17,8 @@ import io.omixer.rpm.database.CompiledDatabase;
 /**
  * Collects the input into {@link Profiles}: one profile per sample, or per taxon of a sample in per-taxon runs. Only
  * observed values of KOs in the database are stored; every value still passes here, so that information on the rest
- * of the input (e.g. how much of it maps to the database) can be gathered in this one place.
+ * of the input (e.g. how much of it maps to the database) can be gathered in this one place. A HUMAnN table passes
+ * its rows through a selection first (profile.reader.HumannRowSelection), so only the rows the run uses reach here.
  *
  * As in 1.x: duplicate values of a KO in a profile are summed in input order; a profile with no observed value is
  * kept (its modules score 0); the taxa of a sample follow the order of a HashMap of their names.
