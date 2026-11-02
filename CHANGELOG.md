@@ -7,6 +7,7 @@ the benchmark is identical, bit for bit. Only the items under "Fixed" change an 
 
 ### Requirements
 - **Java 21 or newer** (1.2: Java 17).
+- Depends on `io.github.omixer:omixer-utils:1.2.0` from Maven Central (was `io.omixer:omixer-utils`, built locally).
 
 ### Performance
 Benchmark (`gradle benchmark`, same machine, best of 3 runs, JVM start included):
