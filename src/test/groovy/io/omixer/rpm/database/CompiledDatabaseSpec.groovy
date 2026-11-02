@@ -19,7 +19,7 @@ class CompiledDatabaseSpec extends Specification {
 	private static List<String> ids(CompiledModule module) {
 		(0..<module.stepCount()).collect { s ->
 			(0..<module.alternativeCount(s)).collect { a ->
-				(0..<module.subunitCount(s, a)).collect { u -> KO_IDS[module.subunit(s, a, u)] }.join(",")
+				(0..<module.orthologCount(s, a)).collect { o -> KO_IDS[module.ortholog(s, a, o)] }.join(",")
 			}.join("|")
 		}
 	}

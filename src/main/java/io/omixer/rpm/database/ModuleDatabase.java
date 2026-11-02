@@ -14,9 +14,9 @@ public record ModuleDatabase(List<ModuleDefinition> modules) {
 		modules = List.copyOf(modules);
 	}
 
-	/** @return every function id of every module (the subunits of every alternative), in database order, with repeats */
+	/** @return every function id of every module (the orthologs of every alternative), in database order, with repeats */
 	public Stream<String> functions() {
 		return modules.stream().flatMap(module -> module.steps().stream()).flatMap(step -> step.alternatives().stream())
-				.flatMap(alternative -> alternative.subunits().stream());
+				.flatMap(alternative -> alternative.orthologs().stream());
 	}
 }

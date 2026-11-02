@@ -2,8 +2,8 @@ package io.omixer.rpm.inference.scoring;
 
 /**
  * How the values of a module's observed steps combine into its abundance (-s). Every estimator works on step values,
- * never on single KOs: a step's value is the mean of its subunits, zeros included (min: its smallest present
- * subunit).
+ * never on single KOs: a step's value is the mean of the orthologs of its alternative (one, or the subunits of a
+ * complex), zeros included (min: its smallest present ortholog).
  */
 public sealed interface Estimator {
 

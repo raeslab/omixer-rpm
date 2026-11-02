@@ -13,7 +13,7 @@ import io.omixer.rpm.database.CompiledModule;
  *
  * Two ways to find that path, with the same result (REFACTORING.md, "Scoring"):
  * <ul>
- * <li>per step, when every subunit value of the module is finite and ≥ 0: each step takes its best observed
+ * <li>per step, when every ortholog value of the module is finite and ≥ 0: each step takes its best observed
  * alternative. Coverage is decided step by step and every estimator is monotone in each step value, so no
  * combination can do better;</li>
  * <li>otherwise (negative, NaN or infinite values) every combination in turn, as the estimators' zero rule and NaN
@@ -72,8 +72,8 @@ public final class ModuleScorer {
 	private static boolean allFiniteAndNonNegative(CompiledModule module, double[] values) {
 		for (int s = 0; s < module.stepCount(); s++) {
 			for (int a = 0; a < module.alternativeCount(s); a++) {
-				for (int u = 0; u < module.subunitCount(s, a); u++) {
-					double value = values[module.subunit(s, a, u)];
+				for (int o = 0; o < module.orthologCount(s, a); o++) {
+					double value = values[module.ortholog(s, a, o)];
 					// false for NaN too
 					if (!(value >= 0 && value < Double.POSITIVE_INFINITY)) {
 						return false;
@@ -159,8 +159,8 @@ public final class ModuleScorer {
 		for (int s = 0; s < length; s++) {
 			if (isObserved(module, s, path[s], values)) {
 				observedSteps++;
-				for (int u = 0; u < module.subunitCount(s, path[s]); u++) {
-					double value = values[module.subunit(s, path[s], u)];
+				for (int o = 0; o < module.orthologCount(s, path[s]); o++) {
+					double value = values[module.ortholog(s, path[s], o)];
 					if (value > 0) {
 						abundance = present ? Math.min(abundance, value) : value;
 						present = true;
@@ -172,31 +172,31 @@ public final class ModuleScorer {
 	}
 
 	private boolean isObserved(CompiledModule module, int step, int alternative, double[] values) {
-		int subunits = module.subunitCount(step, alternative);
+		int orthologs = module.orthologCount(step, alternative);
 		int present = 0;
-		for (int u = 0; u < subunits; u++) {
-			if (values[module.subunit(step, alternative, u)] > 0) {
+		for (int o = 0; o < orthologs; o++) {
+			if (values[module.ortholog(step, alternative, o)] > 0) {
 				present++;
 			}
 		}
-		return options.complexRule().isObserved(present, subunits);
+		return options.complexRule().isObserved(present, orthologs);
 	}
 
-	/** The value of an alternative: the mean of its subunits, zeros included, summed in database order */
+	/** The value of an alternative: the mean of its orthologs, zeros included, summed in database order */
 	private static double mean(CompiledModule module, int step, int alternative, double[] values) {
-		int subunits = module.subunitCount(step, alternative);
+		int orthologs = module.orthologCount(step, alternative);
 		double sum = 0;
-		for (int u = 0; u < subunits; u++) {
-			sum += values[module.subunit(step, alternative, u)];
+		for (int o = 0; o < orthologs; o++) {
+			sum += values[module.ortholog(step, alternative, o)];
 		}
-		return sum / subunits;
+		return sum / orthologs;
 	}
 
-	/** The smallest subunit of an alternative with a value > 0 (an observed alternative has one) */
+	/** The smallest ortholog of an alternative with a value > 0 (an observed alternative has one) */
 	private static double smallestPresent(CompiledModule module, int step, int alternative, double[] values) {
 		double smallest = Double.POSITIVE_INFINITY;
-		for (int u = 0; u < module.subunitCount(step, alternative); u++) {
-			double value = values[module.subunit(step, alternative, u)];
+		for (int o = 0; o < module.orthologCount(step, alternative); o++) {
+			double value = values[module.ortholog(step, alternative, o)];
 			if (value > 0) {
 				smallest = Math.min(smallest, value);
 			}

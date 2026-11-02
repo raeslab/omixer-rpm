@@ -4,7 +4,7 @@ import spock.lang.Specification
 
 class ModuleDatabaseSpec extends Specification {
 
-	def "functions are every subunit of every alternative of every step, in database order, with repeats"() {
+	def "functions are every ortholog of every alternative of every step, in database order, with repeats"() {
 
 		given: "M1: K1,K2 | K3 / K1; M2: K3"
 		def database = new ModuleDatabase([

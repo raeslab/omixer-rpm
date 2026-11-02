@@ -23,13 +23,13 @@ class ModuleDefinitionSpec extends Specification {
 	def "a definition keeps its own copy of the lists it is built from"() {
 
 		given:
-		def subunits = ["K1"]
-		def alternative = new Alternative(subunits)
+		def orthologs = ["K1"]
+		def alternative = new Alternative(orthologs)
 
 		when:
-		subunits << "K2"
+		orthologs << "K2"
 
 		then:
-		alternative.subunits() == ["K1"]
+		alternative.orthologs() == ["K1"]
 	}
 }

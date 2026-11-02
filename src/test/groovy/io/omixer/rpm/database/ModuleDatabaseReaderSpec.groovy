@@ -21,9 +21,9 @@ class ModuleDatabaseReaderSpec extends Specification {
 		ModuleDatabaseReader.read(file, { warnings << it })
 	}
 
-	/** The steps of a module as text: alternatives joined by |, subunits by + */
+	/** The steps of a module as text: alternatives joined by |, the orthologs of an alternative by + */
 	private static List<String> steps(ModuleDefinition module) {
-		module.steps().collect { step -> step.alternatives().collect { it.subunits().join("+") }.join("|") }
+		module.steps().collect { step -> step.alternatives().collect { it.orthologs().join("+") }.join("|") }
 	}
 
 	def "TAB separates alternatives and comma the subunits of a complex, in database order"() {
@@ -164,7 +164,7 @@ class ModuleDatabaseReaderSpec extends Specification {
 		modules[index].steps().size() == stepCount
 
 		and: "every alternative of MF0004 is a complex of two subunits"
-		modules[3].steps().every { step -> step.alternatives().every { it.subunits().size() == 2 } }
+		modules[3].steps().every { step -> step.alternatives().every { it.orthologs().size() == 2 } }
 
 		where:
 		index | id       | name                                   | stepCount
@@ -179,7 +179,7 @@ class ModuleDatabaseReaderSpec extends Specification {
 		def database = read("M1\tfirst\nK1\n///\n")
 
 		when:
-		database.modules()[0].steps()[0].alternatives()[0].subunits().add("K2")
+		database.modules()[0].steps()[0].alternatives()[0].orthologs().add("K2")
 
 		then:
 		thrown(UnsupportedOperationException)

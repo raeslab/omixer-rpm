@@ -7,8 +7,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A module database prepared for scoring, built once and shared by every profile and thread: a dictionary of the KOs
- * that some module uses, and each module with its KOs as indexes of that dictionary. Immutable.
+ * A module database prepared for scoring, built once and shared by every profile and thread: a dictionary of the
+ * orthologs that some module uses (KO id → index, numbered in order of first appearance), and each module with its
+ * orthologs as indexes of that dictionary. Immutable.
+ *
+ * Why indexes: the KO id of every input value is still looked up once, in this dictionary, while the profiles are
+ * read ({@link #indexOf}); a design with a map of KO id → value per profile would make that same lookup. What the
+ * indexes save comes afterwards. A profile stores its values as an index array and a value array (12 bytes a value,
+ * against some 50 to 70 for a map entry with a boxed value), which keeps memory low with one profile per taxon of
+ * every sample, and scoring reads a value with an array access instead of a hash lookup. The speed share of the
+ * indexes alone was never measured: the 2.0 speed-up over 1.2 comes from several changes together (REFACTORING.md).
  */
 public final class CompiledDatabase {
 
@@ -36,13 +44,13 @@ public final class CompiledDatabase {
 				List<Alternative> alternatives = definition.steps().get(s).alternatives();
 				steps[s] = new int[alternatives.size()][];
 				for (int a = 0; a < steps[s].length; a++) {
-					List<String> subunits = alternatives.get(a).subunits();
-					steps[s][a] = new int[subunits.size()];
-					for (int u = 0; u < subunits.size(); u++) {
-						// a new KO gets the next index
-						int ko = index.computeIfAbsent(subunits.get(u), id -> index.size());
-						steps[s][a][u] = ko;
-						used.set(ko);
+					List<String> orthologs = alternatives.get(a).orthologs();
+					steps[s][a] = new int[orthologs.size()];
+					for (int o = 0; o < orthologs.size(); o++) {
+						// a new ortholog gets the next index
+						int ortholog = index.computeIfAbsent(orthologs.get(o), id -> index.size());
+						steps[s][a][o] = ortholog;
+						used.set(ortholog);
 					}
 				}
 			}

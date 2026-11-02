@@ -17,9 +17,9 @@ import io.omixer.utils.Constants;
 
 /**
  * Reads a module database: one module per block, a header line {@code ID<TAB>name}, then one line per step, where
- * TAB separates alternatives and comma the subunits of a complex. A block ends with {@code ///}; the last one may
- * end with the file (as in GBMs.v1.0), with a warning, but a file in which no block ends with {@code ///} is not a
- * module database. Blank lines are ignored.
+ * TAB separates alternatives and comma the orthologs of a complex (its subunits). A block ends with {@code ///};
+ * the last one may end with the file (as in GBMs.v1.0), with a warning, but a file in which no block ends with
+ * {@code ///} is not a module database. Blank lines are ignored.
  */
 public final class ModuleDatabaseReader {
 
@@ -108,12 +108,12 @@ public final class ModuleDatabaseReader {
 	private static Step readStep(String line, String fileName, int lineNumber) {
 		List<Alternative> alternatives = new ArrayList<>();
 		for (String alternative : line.split(Constants.TAB)) {
-			String[] subunits = alternative.split(Constants.COMMA);
-			if (subunits.length == 0) {
+			String[] orthologs = alternative.split(Constants.COMMA);
+			if (orthologs.length == 0) {
 				throw new ModuleFileFormatException(fileName + ", line " + lineNumber + ": step '" + line
 						+ "' has an alternative without a KO");
 			}
-			alternatives.add(new Alternative(Arrays.asList(subunits)));
+			alternatives.add(new Alternative(Arrays.asList(orthologs)));
 		}
 		return new Step(alternatives);
 	}
