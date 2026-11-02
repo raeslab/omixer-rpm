@@ -32,21 +32,30 @@ public enum InputFormat {
 	},
 
 	/**
-	 * HUMAnN2 stratified gene families: KO or KO|taxon, then one abundance per sample; an unstratified row has taxon
-	 * NA. Not offered on the command line until the HUMAnN 3/4 rework (BUGS.md B08, B09, B14)
+	 * A HUMAnN table (-a humann), e.g. gene families regrouped to KOs: function or function|taxon, then one abundance
+	 * per sample. A function may carry its name (humann_rename_table: "K00001: alcohol dehydrogenase"); an
+	 * unstratified row (the community total) has no taxon. Which rows are kept is up to {@link HumannReader}
 	 */
-	HUMANN(1, "KO[|taxon]<TAB>one abundance per sample") {
+	HUMANN(1, "function[|taxon]<TAB>one abundance per sample") {
 		@Override
 		public String taxon(String[] fields) {
-			String[] koTaxon = fields[0].split("\\|");
-			return koTaxon.length == 2 ? koTaxon[1] : "NA";
+			int stratum = fields[0].indexOf(STRATUM);
+			return stratum < 0 ? null : fields[0].substring(stratum + 1);
 		}
 
 		@Override
 		public String function(String[] fields) {
-			return fields[0].split("\\|")[0];
+			int stratum = fields[0].indexOf(STRATUM);
+			String function = stratum < 0 ? fields[0] : fields[0].substring(0, stratum);
+			int name = function.indexOf(NAME);
+			return name < 0 ? function : function.substring(0, name);
 		}
 	};
+
+	/** Separates a HUMAnN function from its stratum (taxon) */
+	private static final char STRATUM = '|';
+	/** Separates a HUMAnN function from its name */
+	private static final String NAME = ": ";
 
 	private final int keyColumns;
 	private final String matrixRow;

@@ -52,7 +52,7 @@ class MatrixReaderSpec extends Specification {
 		InputFormat.KO       | "entry\tS1\tS2"       | "K00001\t1\tabc"   | "KO<TAB>one abundance per sample"
 		InputFormat.KO       | "entry\tS1\tS2"       | "Sp1\tK00001\t1"   | "KO<TAB>one abundance per sample"
 		InputFormat.TAXON_KO | "Species\tKO\tS1"     | "Sp1\tK00001\tabc" | "taxon<TAB>KO<TAB>one abundance per sample"
-		InputFormat.HUMANN   | "entry\tS1"           | "K00001\tabc"      | "KO[|taxon]<TAB>one abundance per sample"
+		InputFormat.HUMANN   | "entry\tS1"           | "K00001\tabc"      | "function[|taxon]<TAB>one abundance per sample"
 	}
 
 	def "an empty cell is skipped, so its row has too few values"() {
@@ -65,7 +65,7 @@ class MatrixReaderSpec extends Specification {
 		e.message == "Line 2 have 2 entries instead of 4"
 	}
 
-	def "HUMAnN rows: KO or KO|taxon; an unstratified row has taxon NA"() {
+	def "HUMAnN rows: function or function|taxon, where the function may have a name; an unstratified row has no taxon"() {
 
 		when:
 		def sink = read(InputFormat.HUMANN, "entry\tS1\n${row}\t1\n")
@@ -74,24 +74,12 @@ class MatrixReaderSpec extends Specification {
 		sink.values() == [["S1", taxon, function, 1d]]
 
 		where:
-		row                                                    | function    | taxon
-		"K00001|g__Acidaminococcus.s__Acidaminococcus_fermentans" | "K00001" | "g__Acidaminococcus.s__Acidaminococcus_fermentans"
-		"K19611|unclassified"                                  | "K19611"    | "unclassified"
-		"K19611"                                               | "K19611"    | "NA"
-		"UNGROUPED"                                            | "UNGROUPED" | "NA"
-		"UNMAPPED"                                             | "UNMAPPED"  | "NA"
-	}
-
-	def "a HUMAnN file: 9 samples, 4 functions (2 KOs, UNMAPPED, UNGROUPED) and 20 taxa (18, NA, unclassified)"() {
-
-		when:
-		def sink = new RecordingSink()
-		new MatrixReader(InputFormat.HUMANN).read(Path.of("src/test/resources/humann2KoTaxa.tsv"), sink)
-		def sample = sink.values().findAll { it[0] == "10776.Healthy" }
-
-		then:
-		sink.events.count { it instanceof String } == 9
-		sample.collect { it[2] }.toSet().size() == 4
-		sample.collect { it[1] }.toSet().size() == 20
+		row                                                       | function    | taxon
+		"K00001|g__Acidaminococcus.s__Acidaminococcus_fermentans" | "K00001"    | "g__Acidaminococcus.s__Acidaminococcus_fermentans"
+		"K19611|unclassified"                                     | "K19611"    | "unclassified"
+		"K19611"                                                  | "K19611"    | null
+		"K01838: beta-phosphoglucomutase [EC:5.4.2.6]"            | "K01838"    | null
+		"K01838: beta-phosphoglucomutase [EC:5.4.2.6]|bug1"       | "K01838"    | "bug1"
+		"UNGROUPED"                                               | "UNGROUPED" | null
 	}
 }

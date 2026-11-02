@@ -59,8 +59,11 @@ public final class OmixerRpmCommand implements Callable<Integer> {
 	private static final String COMPLEX_RULES = Arrays.stream(ComplexRule.values()).map(ComplexRule::cliName)
 			.collect(Collectors.joining("|"));
 
-	/** Accepted values of --annotation and --export-format; h2 (HUMAnN2) waits for the HUMAnN 3/4 rework (B08, B09, B14) */
-	private static final List<String> FORMATS = List.of("1", "2");
+	/** Accepted values of --annotation; humann reads HUMAnN 2 and 3 */
+	private static final List<String> ANNOTATIONS = List.of("1", "2", "humann");
+
+	/** Accepted values of --export-format */
+	private static final List<String> EXPORT_FORMATS = List.of("1", "2");
 
 	@Spec
 	private CommandLine.Model.CommandSpec spec;
@@ -95,7 +98,9 @@ public final class OmixerRpmCommand implements Callable<Integer> {
 	private String database;
 
 	@Option(names = { "-a", "--annotation" }, paramLabel = "ANNOTATION", description = { "Input file annotation.",
-			"Use 1 for orthologs only files or 2 for taxonomic annotation followed by orthologs.", "Defaults to 1" })
+			"Use 1 for orthologs only files or 2 for taxonomic annotation followed by orthologs.",
+			"Use humann for HUMAnN gene families regrouped to KOs (humann_regroup_table), with or without strata (KO|taxon).",
+			"Defaults to 1" })
 	private String annotation;
 
 	@Option(names = { "-e", "--export-format" }, paramLabel = "FORMAT", description = { "The output file format.",
@@ -107,7 +112,7 @@ public final class OmixerRpmCommand implements Callable<Integer> {
 			"Number of threads to use when mapping the modules.", "Defaults to 1" })
 	private String threads;
 
-	@Option(names = { "-i", "--input" }, paramLabel = "PATH", description = "Path to the input matrix or input directory with one headerless file per sample")
+	@Option(names = { "-i", "--input" }, paramLabel = "PATH", description = "Path to the input matrix or input directory with one headerless file per sample (-a humann: one table)")
 	private String input;
 
 	@Option(names = { "-o", "--output-dir" }, paramLabel = "DIRECTORY", description = "Path to the output directory")
@@ -212,11 +217,11 @@ public final class OmixerRpmCommand implements Callable<Integer> {
 		if (database == null) {
 			throw new IllegalArgumentException("Missing value for module database file");
 		}
-		if (annotation != null && !FORMATS.contains(annotation)) {
+		if (annotation != null && !ANNOTATIONS.contains(annotation)) {
 			throw new IllegalArgumentException("Annotation (" + annotation
 					+ ") is not a valid annotation. Please choose one of the available annotations");
 		}
-		if (exportFormat != null && !FORMATS.contains(exportFormat)) {
+		if (exportFormat != null && !EXPORT_FORMATS.contains(exportFormat)) {
 			throw new IllegalArgumentException("Export format (" + exportFormat
 					+ ") is not a valid output format. Please choose one of the available formats");
 		}
@@ -226,8 +231,12 @@ public final class OmixerRpmCommand implements Callable<Integer> {
 		Path output = Path.of(outputDir != null ? outputDir : "module-prediction-" + System.currentTimeMillis());
 		int threadCount = threads == null ? 1 : threadCount();
 
-		boolean taxonInput = "2".equals(annotation);
-		InputFormat format = taxonInput ? InputFormat.TAXON_KO : InputFormat.KO;
+		InputFormat format = annotation == null ? InputFormat.KO : switch (annotation) {
+			case "2" -> InputFormat.TAXON_KO;
+			case "humann" -> InputFormat.HUMANN;
+			default -> InputFormat.KO;
+		};
+		boolean taxonInput = format != InputFormat.KO;
 		CoverageCutoff cutoff = minimumCoverage == -1d ? new CoverageCutoff.Automatic()
 				: new CoverageCutoff.Fixed(minimumCoverage);
 		SharedKoResolution resolution = distribute ? new SharedKoResolution.EqualSplit() : new SharedKoResolution.None();

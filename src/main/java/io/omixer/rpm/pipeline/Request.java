@@ -12,7 +12,7 @@ import io.omixer.rpm.profile.reader.InputFormat;
  *
  * @param input     a matrix, or a directory with one file per sample
  * @param format    the layout of the input rows (-a)
- * @param perTaxon  true for results per taxon of a sample, false for one result per sample
+ * @param perTaxon  true for results per taxon of a sample (when the input has taxa), false for one result per sample
  * @param database  the module database
  * @param inference how modules are inferred
  * @param output    the output files (-e)
